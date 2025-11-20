@@ -15,16 +15,24 @@ import {
 export function PwaInstallButton() {
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
     const [isIOS, setIsIOS] = useState(false)
-    const [isStandalone, setIsStandalone] = useState(false)
+    const [isInstalled, setIsInstalled] = useState(false)
 
     useEffect(() => {
-        // 1. Check if already installed (Standalone mode)
-        setIsStandalone(window.matchMedia('(display-mode: standalone)').matches)
+        // 1. CHECK IF ALREADY INSTALLED (Standalone Mode)
+        // Standard check for Chrome/Android/Desktop
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+        // Legacy check for iOS Safari
+        const isIOSStandalone = (window.navigator as any).standalone === true
 
-        // 2. Check if iOS
+        if (isStandalone || isIOSStandalone) {
+            setIsInstalled(true) // Stop here, don't run the rest
+            return
+        }
+
+        // 2. Check if Device is iOS (for instructions)
         setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream)
 
-        // 3. Listen for the Install Prompt
+        // 3. Listen for the Install Prompt (Android/Desktop)
         const handler = (e: any) => {
             e.preventDefault()
             setDeferredPrompt(e)
@@ -33,8 +41,10 @@ export function PwaInstallButton() {
         return () => window.removeEventListener("beforeinstallprompt", handler)
     }, [])
 
-    // If already installed, don't show button
-    if (isStandalone) return null
+    // IF INSTALLED: HIDE EVERYTHING
+    if (isInstalled) return null
+
+    // --- LOGIC FOR BROWSER USERS BELOW ---
 
     const handleInstallClick = async () => {
         if (deferredPrompt) {
@@ -44,10 +54,7 @@ export function PwaInstallButton() {
         }
     }
 
-    // RENDER LOGIC:
-    // If we have the prompt -> Show simple button
-    // If we DON'T have prompt -> Show button that opens Help Dialog
-
+    // Scenario A: Android/Chrome (We captured the automatic prompt)
     if (deferredPrompt) {
         return (
             <div className="px-2">
@@ -58,12 +65,12 @@ export function PwaInstallButton() {
         )
     }
 
-    // Fallback: Instructions Dialog
+    // Scenario B: iOS or Manual Fallback (Show Help Dialog)
     return (
         <div className="px-2">
             <Dialog>
                 <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full gap-2 text-slate-600">
+                    <Button variant="outline" className="w-full gap-2 text-slate-600 border-dashed">
                         <Smartphone className="h-4 w-4" /> Install App
                     </Button>
                 </DialogTrigger>
@@ -71,7 +78,7 @@ export function PwaInstallButton() {
                     <DialogHeader>
                         <DialogTitle>Install Ngatur Stok</DialogTitle>
                         <DialogDescription>
-                            Install this app on your home screen for a better experience.
+                            Get the full screen experience.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 mt-2">
