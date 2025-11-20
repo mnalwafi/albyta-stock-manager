@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Image from "next/image"
+import { PwaInstallButton } from "@/components/PwaInstallButton"
 
 // --- DATA CONFIGURATION ---
 const data = {
@@ -252,6 +253,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
             {/* FOOTER: USER PROFILE */}
             <SidebarFooter>
+                <PwaInstallButton />
                 <NavUser user={data.user} />
             </SidebarFooter>
         </Sidebar>

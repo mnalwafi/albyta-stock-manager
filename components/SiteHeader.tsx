@@ -33,7 +33,7 @@ export function SiteHeader() {
     const currentTitle = getPageTitle(pathname)
 
     return (
-        <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-background px-4 sticky top-0 z-10">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-background px-4 sticky top-0 z-10 rounded-t-xl">
 
             {/* LEFT SIDE: Trigger & Breadcrumbs */}
             <div className="flex items-center gap-2">
