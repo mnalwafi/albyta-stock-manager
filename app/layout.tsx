@@ -8,7 +8,7 @@ import { MainLayout } from "@/components/MainLayout";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Ngatur Stock",
+  title: "Ngatur Stok",
   description: "Manage your business inventory and finance.",
   manifest: "/manifest.json",
   icons: {
