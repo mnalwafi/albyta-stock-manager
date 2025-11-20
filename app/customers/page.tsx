@@ -1,0 +1,97 @@
+"use client"
+
+import { useState } from "react"
+import { useLiveQuery } from "dexie-react-hooks"
+import { db } from "@/lib/db"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Trash2, Users, Plus } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
+import { useRouter } from "next/navigation"
+
+export default function CustomersPage() {
+    const router = useRouter()
+    const customers = useLiveQuery(() => db.customers.toArray())
+
+    const [isOpen, setIsOpen] = useState(false)
+    const [newName, setNewName] = useState("")
+    const [newPhone, setNewPhone] = useState("")
+
+    const handleAddCustomer = async (e: React.FormEvent) => {
+        e.preventDefault()
+        await db.customers.add({
+            name: newName,
+            phone: newPhone,
+            totalDebt: 0,
+            updatedAt: new Date()
+        })
+        setNewName(""); setNewPhone(""); setIsOpen(false)
+    }
+
+    const handleDelete = async (id: number) => {
+        if (confirm("Delete this customer? History will be preserved but customer data removed.")) {
+            await db.customers.delete(id)
+        }
+    }
+
+    const formatMoney = (n: number) => new Intl.NumberFormat("id-ID").format(n)
+
+    return (
+        <div className="flex flex-1 flex-col gap-4 mt-4">
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold flex items-center gap-2">
+                            <Users className="h-6 w-6" /> Customer List
+                        </h1>
+                        <p className="text-muted-foreground text-sm">Manage debt and contacts</p>
+                    </div>
+                </div>
+
+                {/* Add Customer Dialog */}
+                <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                    <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Customer</Button></DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader><DialogTitle>New Customer</DialogTitle></DialogHeader>
+                        <form onSubmit={handleAddCustomer} className="space-y-4">
+                            <Input placeholder="Name (e.g. Pak Budi)" value={newName} onChange={e => setNewName(e.target.value)} required />
+                            <Input placeholder="Phone (Optional)" value={newPhone} onChange={e => setNewPhone(e.target.value)} />
+                            <Button type="submit" className="w-full">Save Customer</Button>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
+            <div className="rounded-md border">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Phone</TableHead>
+                            <TableHead className="text-right">Current Debt (Kasbon)</TableHead>
+                            <TableHead className="text-center">Action</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {customers?.map(c => (
+                            <TableRow key={c.id}>
+                                <TableCell className="font-medium">{c.name}</TableCell>
+                                <TableCell>{c.phone || "-"}</TableCell>
+                                <TableCell className={`text-right font-bold ${c.totalDebt > 0 ? 'text-red-600' : 'text-slate-500'}`}>
+                                    Rp {formatMoney(c.totalDebt)}
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}>
+                                        <Trash2 className="h-4 w-4 text-red-400" />
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+        </div>
+    )
+}

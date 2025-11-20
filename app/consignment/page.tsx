@@ -1,0 +1,257 @@
+"use client"
+
+import { useState } from "react"
+import { useLiveQuery } from "dexie-react-hooks"
+import { db, type Consignment } from "@/lib/db"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ArrowLeft, PackageOpen, CheckCircle2, Truck } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Card, CardContent } from "@/components/ui/card"
+
+export default function ConsignmentPage() {
+    const router = useRouter()
+    const customers = useLiveQuery(() => db.customers.toArray())
+    const stocks = useLiveQuery(() => db.stocks.toArray())
+    const activeConsignments = useLiveQuery(() =>
+        db.consignments.where("status").equals("OPEN").reverse().toArray()
+    )
+
+    // --- STATE FOR NEW CONSIGNMENT ---
+    const [isNewOpen, setIsNewOpen] = useState(false)
+    const [selectedCustomer, setSelectedCustomer] = useState("")
+    const [selectedStock, setSelectedStock] = useState("")
+    const [qty, setQty] = useState("")
+
+    // --- STATE FOR SETTLEMENT (Setor) ---
+    const [settleOpen, setSettleOpen] = useState(false)
+    const [activeConsignment, setActiveConsignment] = useState<Consignment | null>(null)
+    const [soldQtys, setSoldQtys] = useState<Record<number, number>>({}) // Map stockId -> soldQty
+
+    // 1. CREATE NEW CONSIGNMENT (Outbound)
+    const handleCreate = async () => {
+        if (!selectedCustomer || !selectedStock || !qty) return
+
+        const stockItem = stocks?.find(s => s.id === Number(selectedStock))
+        if (!stockItem) return
+
+        const quantity = Number(qty)
+        if (quantity > stockItem.quantity) {
+            alert("Not enough stock in warehouse!")
+            return
+        }
+
+        await db.transaction('rw', db.stocks, db.consignments, async () => {
+            // A. Deduct from Warehouse
+            await db.stocks.update(stockItem.id, { quantity: stockItem.quantity - quantity })
+
+            // B. Create Consignment Record
+            await db.consignments.add({
+                date: new Date(),
+                customerId: Number(selectedCustomer),
+                status: 'OPEN',
+                items: [{
+                    stockId: stockItem.id,
+                    name: stockItem.name,
+                    initialQty: quantity,
+                    costPrice: stockItem.costPrice || 0,
+                    price: stockItem.price
+                }]
+            })
+        })
+
+        setIsNewOpen(false); setQty(""); setSelectedStock("");
+        alert("Items moved to Reseller!")
+    }
+
+    // 2. SETTLE CONSIGNMENT (Inbound/Money)
+    const handleSettle = async () => {
+        if (!activeConsignment) return
+
+        try {
+            await db.transaction('rw', db.stocks, db.transactions, db.consignments, async () => {
+                let totalRevenue = 0
+                const txItems = []
+
+                for (const item of activeConsignment.items) {
+                    const sold = soldQtys[item.stockId] || 0
+                    const returned = item.initialQty - sold
+
+                    // A. Validate
+                    if (sold > item.initialQty) throw new Error("Cannot sell more than initial qty")
+
+                    // B. Return unsold items to Warehouse
+                    if (returned > 0) {
+                        const currentStock = await db.stocks.get(item.stockId)
+                        if (currentStock) {
+                            await db.stocks.update(item.stockId, { quantity: currentStock.quantity + returned })
+                        }
+                    }
+
+                    // C. Prepare Sales Record
+                    if (sold > 0) {
+                        totalRevenue += sold * item.price
+                        txItems.push({
+                            stockId: item.stockId, name: item.name, qty: sold, price: item.price, costPrice: item.costPrice
+                        })
+                    }
+                }
+
+                // D. Create Transaction for the SOLD items
+                if (txItems.length > 0) {
+                    await db.transactions.add({
+                        date: new Date(),
+                        total: totalRevenue,
+                        payment: totalRevenue, // Assuming they pay cash upon settlement
+                        change: 0,
+                        customerId: activeConsignment.customerId,
+                        isDebt: false, // Can be changed if they pay later
+                        items: txItems
+                    })
+                }
+
+                // E. Close Consignment
+                await db.consignments.update(activeConsignment.id, {
+                    status: 'SETTLED',
+                    settledAt: new Date()
+                })
+            })
+
+            setSettleOpen(false)
+            alert("Settlement complete! Revenue recorded and unsold items returned.")
+        } catch (e) {
+            alert("Error during settlement. Check inputs.")
+        }
+    }
+
+    const getCustomerName = (id: number) => customers?.find(c => c.id === id)?.name || "Unknown"
+
+    return (
+        <div className="flex flex-1 flex-col gap-4 mt-4">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold flex items-center gap-2">
+                            <Truck className="h-6 w-6" /> Titip Jual (Consignment)
+                        </h1>
+                        <p className="text-muted-foreground text-sm">Track items held by resellers.</p>
+                    </div>
+                </div>
+
+                {/* NEW CONSIGNMENT MODAL */}
+                <Dialog open={isNewOpen} onOpenChange={setIsNewOpen}>
+                    <DialogTrigger asChild><Button>+ New Shipment</Button></DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader><DialogTitle>Send Items to Reseller</DialogTitle></DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Reseller</label>
+                                <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+                                    <SelectTrigger><SelectValue placeholder="Select Customer" /></SelectTrigger>
+                                    <SelectContent>
+                                        {customers?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Item</label>
+                                <Select value={selectedStock} onValueChange={setSelectedStock}>
+                                    <SelectTrigger><SelectValue placeholder="Select Item" /></SelectTrigger>
+                                    <SelectContent>
+                                        {stocks?.map(s => <SelectItem key={s.id} value={s.id.toString()}>{s.name} (Stok: {s.quantity})</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Quantity to Send</label>
+                                <Input type="number" value={qty} onChange={e => setQty(e.target.value)} placeholder="0" />
+                            </div>
+                            <Button onClick={handleCreate} className="w-full">Confirm Shipment</Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
+            {/* ACTIVE LIST */}
+            <div className="grid gap-4">
+                {activeConsignments?.length === 0 ? (
+                    <div className="text-center py-10 text-muted-foreground border rounded-md bg-slate-50">
+                        No active consignments. Everyone has settled!
+                    </div>
+                ) : (
+                    activeConsignments?.map(con => (
+                        <Card key={con.id}>
+                            <CardContent className="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                                <div>
+                                    <h3 className="font-bold text-lg">{getCustomerName(con.customerId)}</h3>
+                                    <p className="text-sm text-muted-foreground">Sent on: {con.date.toLocaleDateString()}</p>
+                                    <div className="mt-2 space-y-1">
+                                        {con.items.map((item, idx) => (
+                                            <div key={idx} className="text-sm bg-blue-50 text-blue-700 px-2 py-1 rounded inline-block mr-2">
+                                                {item.name}: <strong>{item.initialQty} pcs</strong>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* SETTLE BUTTON */}
+                                <Dialog open={settleOpen && activeConsignment?.id === con.id} onOpenChange={(o) => {
+                                    setSettleOpen(o);
+                                    if (o) {
+                                        setActiveConsignment(con);
+                                        setSoldQtys({}); // Reset inputs
+                                    }
+                                }}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" className="border-green-200 hover:bg-green-50 text-green-700">
+                                            <PackageOpen className="mr-2 h-4 w-4" /> Setor / Settle
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader><DialogTitle>Process Settlement</DialogTitle></DialogHeader>
+                                        <div className="py-4 space-y-6">
+                                            <p className="text-sm text-muted-foreground">
+                                                Enter how many items were <strong>SOLD</strong>. The rest will be returned to inventory automatically.
+                                            </p>
+
+                                            {con.items.map((item) => (
+                                                <div key={item.stockId} className="flex items-center justify-between">
+                                                    <div>
+                                                        <div className="font-medium">{item.name}</div>
+                                                        <div className="text-xs text-muted-foreground">Initial: {item.initialQty}</div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <label className="text-xs font-bold">SOLD:</label>
+                                                        <Input
+                                                            type="number"
+                                                            className="w-20"
+                                                            min={0}
+                                                            max={item.initialQty}
+                                                            placeholder="0"
+                                                            onChange={(e) => setSoldQtys(prev => ({
+                                                                ...prev,
+                                                                [item.stockId]: Number(e.target.value)
+                                                            }))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+
+                                            <Button onClick={handleSettle} className="w-full bg-green-600 hover:bg-green-700">
+                                                <CheckCircle2 className="mr-2 h-4 w-4" /> Finalize Settlement
+                                            </Button>
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
+                            </CardContent>
+                        </Card>
+                    ))
+                )}
+            </div>
+        </div>
+    )
+}
