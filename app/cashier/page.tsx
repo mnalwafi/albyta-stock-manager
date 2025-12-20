@@ -30,6 +30,10 @@ export default function CashierPage() {
     const [selectedCustomerId, setSelectedCustomerId] = useState<string>("walk-in")
     const [isDebt, setIsDebt] = useState(false)
 
+    // --- HELPER: CALCULATE TOTAL ---
+    const cartTotal = cart.reduce((acc, item) => acc + (item.price * item.cartQty), 0)
+    const change = rawPayment - cartTotal
+
     const handlePaymentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value
         const numberString = value.replace(/[^0-9]/g, "")
@@ -45,18 +49,18 @@ export default function CashierPage() {
         setDisplayPayment(num.toLocaleString("id-ID"))
     }
 
+    // --- CART ACTIONS ---
     const addToCart = (item: StockItem) => {
         const existing = cart.find(c => c.id === item.id)
-
         if (existing) {
             if (existing.cartQty >= item.quantity) {
-                alert("Stok tidak cukup!") // Translated
+                alert("Stok tidak cukup!")
                 return
             }
             setCart(cart.map(c => c.id === item.id ? { ...c, cartQty: c.cartQty + 1 } : c))
         } else {
             if (item.quantity < 1) {
-                alert("Stok habis!") // Translated
+                alert("Stok habis!")
                 return
             }
             setCart([...cart, { ...item, cartQty: 1 }])
@@ -79,16 +83,22 @@ export default function CashierPage() {
         }))
     }
 
+    // --- CHECKOUT LOGIC (UPDATED) ---
     const handleCheckout = async () => {
         if (cart.length === 0) return
 
         if (isDebt && selectedCustomerId === "walk-in") {
-            alert("Error: Harap pilih Nama Pelanggan untuk Kasbon.") // Translated
+            alert("Error: Harap pilih Nama Pelanggan untuk Kasbon.")
             return
         }
 
+        // NEW LOGIC: If payment is 0, assume Exact Amount (Uang Pas)
+        const finalPayment = (!isDebt && rawPayment === 0) ? cartTotal : rawPayment
+        const finalChange = (!isDebt && rawPayment === 0) ? 0 : (finalPayment - cartTotal)
+
         try {
             await db.transaction('rw', db.stocks, db.transactions, db.customers, async () => {
+                // 1. Deduct Stock
                 for (const item of cart) {
                     const currentStock = await db.stocks.get(item.id)
                     if (currentStock) {
@@ -96,6 +106,7 @@ export default function CashierPage() {
                     }
                 }
 
+                // 2. Add Debt (if applicable)
                 if (isDebt && selectedCustomerId !== "walk-in") {
                     const cId = parseInt(selectedCustomerId)
                     const customer = await db.customers.get(cId)
@@ -106,11 +117,12 @@ export default function CashierPage() {
                     }
                 }
 
+                // 3. Record Transaction
                 await db.transactions.add({
                     date: new Date(),
                     total: cartTotal,
-                    payment: isDebt ? 0 : rawPayment,
-                    change: isDebt ? 0 : change,
+                    payment: isDebt ? 0 : finalPayment, // Use calculated finalPayment
+                    change: isDebt ? 0 : finalChange,   // Use calculated finalChange
                     customerId: selectedCustomerId === "walk-in" ? undefined : parseInt(selectedCustomerId),
                     isDebt: isDebt,
                     items: cart.map(item => ({
@@ -119,29 +131,22 @@ export default function CashierPage() {
                 })
             })
 
-            alert("Transaksi Berhasil!") // Translated
+            alert("Transaksi Berhasil!")
             setCart([]); setRawPayment(0); setDisplayPayment(""); setIsDebt(false); setSelectedCustomerId("walk-in")
 
-        } catch (error) { console.error(error); alert("Gagal memproses transaksi.") } // Translated
+        } catch (error) { console.error(error); alert("Gagal memproses transaksi.") }
     }
-
-    const cartTotal = cart.reduce((acc, item) => acc + (item.price * item.cartQty), 0)
-    const change = rawPayment - cartTotal
-
-    const filteredStocks = stocks?.filter(s =>
-        s.name.toLowerCase().includes(search.toLowerCase()) ||
-        s.sku.toLowerCase().includes(search.toLowerCase())
-    )
 
     const formatMoney = (n: number) => new Intl.NumberFormat("id-ID").format(n)
 
+    // --- SIDEBAR UI ---
     const CartSidebarContent = (
         <div className="flex flex-col h-full">
             <ScrollArea className="flex-1 p-4">
                 {cart.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-muted-foreground space-y-2">
                         <ShoppingCart className="h-12 w-12 opacity-20" />
-                        <p>Keranjang Kosong</p> {/* Translated */}
+                        <p>Keranjang Kosong</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -173,13 +178,13 @@ export default function CashierPage() {
 
             <div className="p-4 border-t bg-slate-50 space-y-4">
                 <div className="space-y-2">
-                    <Label>Pelanggan</Label> {/* Translated */}
+                    <Label>Pelanggan</Label>
                     <Select value={selectedCustomerId} onValueChange={setSelectedCustomerId}>
                         <SelectTrigger className="bg-white">
                             <SelectValue placeholder="Pilih Pelanggan" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="walk-in">Pelanggan Umum (Walk-in)</SelectItem> {/* Translated */}
+                            <SelectItem value="walk-in">Pelanggan Umum (Walk-in)</SelectItem>
                             {customers?.map(c => (
                                 <SelectItem key={c.id} value={c.id.toString()}>
                                     {c.name} {c.totalDebt > 0 ? `(Hutang: ${formatMoney(c.totalDebt)})` : ''}
@@ -191,7 +196,7 @@ export default function CashierPage() {
 
                 <div className="flex items-center justify-between bg-white p-3 rounded border">
                     <Label htmlFor="debt-mode" className="cursor-pointer">
-                        {isDebt ? "🔴 KASBON (Hutang)" : "🟢 Bayar Tunai"} {/* Translated */}
+                        {isDebt ? "🔴 KASBON (Hutang)" : "🟢 Bayar Tunai"}
                     </Label>
                     <Switch id="debt-mode" checked={isDebt} onCheckedChange={setIsDebt} />
                 </div>
@@ -211,7 +216,7 @@ export default function CashierPage() {
                     <div className="grid grid-cols-2 gap-4">
                         <div className="relative flex flex-col justofy-start gap-1">
                             <span className="text-xs font-bold text-muted-foreground">
-                                Uang Tunai (Rp) {/* Translated */}
+                                Uang Tunai (Rp)
                             </span>
                             <Input
                                 id="price"
@@ -225,13 +230,14 @@ export default function CashierPage() {
 
                         <div className="relative flex flex-col justofy-start gap-1">
                             <span className="text-xs font-bold text-muted-foreground">
-                                Kembalian (Rp) {/* Translated */}
+                                Kembalian (Rp)
                             </span>
+                            {/* Logic: If rawPayment is 0 (Exact), change is 0. Else calc diff. */}
                             <Input
                                 type="text"
                                 placeholder="0"
                                 className={`text-right font-bold text-lg ${change < 0 ? 'text-red-500' : 'text-green-600'} !opacity-100`}
-                                value={new Intl.NumberFormat("id-ID").format(change < 0 ? 0 : change)}
+                                value={new Intl.NumberFormat("id-ID").format(rawPayment === 0 ? 0 : (change < 0 ? 0 : change))}
                                 readOnly={true}
                             />
                         </div>
@@ -241,10 +247,11 @@ export default function CashierPage() {
                 <Button
                     size="lg"
                     className={`w-full mt-4 ${isDebt ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
-                    disabled={cart.length === 0 || (!isDebt && rawPayment < cartTotal)}
+                    // LOGIC CHANGE: Only disable if cash is entered (>0) BUT is less than total. If 0 (empty), it's allowed (Exact Pay).
+                    disabled={cart.length === 0 || (!isDebt && rawPayment > 0 && rawPayment < cartTotal)}
                     onClick={handleCheckout}
                 >
-                    {isDebt ? "Konfirmasi Kasbon" : "Bayar & Selesai"} {/* Translated */}
+                    {isDebt ? "Konfirmasi Kasbon" : (rawPayment === 0 ? "Bayar (Uang Pas)" : "Bayar & Selesai")}
                 </Button>
             </div>
         </div>
@@ -252,6 +259,7 @@ export default function CashierPage() {
 
     return (
         <div className="h-screen flex flex-col md:flex-row overflow-hidden bg-slate-50">
+            {/* Left Side (Catalog) */}
             <div className="flex-1 flex flex-col p-4 gap-4 h-full overflow-hidden relative">
                 <div className="flex gap-4 items-center">
                     <Button variant="outline" size="icon" onClick={() => router.push("/")}>
@@ -270,7 +278,10 @@ export default function CashierPage() {
 
                 <ScrollArea className="flex-1">
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-20">
-                        {filteredStocks?.map(item => (
+                        {stocks?.filter(s =>
+                            s.name.toLowerCase().includes(search.toLowerCase()) ||
+                            s.sku.toLowerCase().includes(search.toLowerCase())
+                        ).map(item => (
                             <Card
                                 key={item.id}
                                 className={`cursor-pointer hover:border-blue-500 transition-all active:scale-95 ${item.quantity === 0 ? 'opacity-50 grayscale' : ''}`}
@@ -283,13 +294,15 @@ export default function CashierPage() {
                                 <div className="p-4 pt-0">
                                     <div className="text-lg font-bold text-slate-700">Rp {formatMoney(item.price)}</div>
                                     <div className={`text-xs mt-1 ${item.quantity < 5 ? 'text-red-500' : 'text-green-600'}`}>
-                                        Stok: {item.quantity} {item.unit} {/* Translated */}
+                                        Stok: {item.quantity} {item.unit}
                                     </div>
                                 </div>
                             </Card>
                         ))}
                     </div>
                 </ScrollArea>
+
+                {/* Mobile Cart Trigger */}
                 <div className="md:hidden absolute bottom-6 right-6 z-50">
                     <Sheet>
                         <SheetTrigger asChild>
@@ -303,7 +316,7 @@ export default function CashierPage() {
                         </SheetTrigger>
                         <SheetContent side="bottom" className="h-[85vh] p-0">
                             <SheetHeader className="p-4 border-b">
-                                <SheetTitle>Pesanan Saat Ini</SheetTitle> {/* Translated */}
+                                <SheetTitle>Pesanan Saat Ini</SheetTitle>
                             </SheetHeader>
                             {CartSidebarContent}
                         </SheetContent>
@@ -311,9 +324,10 @@ export default function CashierPage() {
                 </div>
             </div>
 
+            {/* Right Side (Cart Sidebar) */}
             <div className="hidden md:flex w-[400px] bg-white border-l flex-col h-full shadow-xl z-10">
                 <div className="p-4 border-b bg-slate-50">
-                    <h2 className="font-bold flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> Pesanan</h2> {/* Translated */}
+                    <h2 className="font-bold flex items-center gap-2"><ShoppingCart className="h-5 w-5" /> Pesanan</h2>
                 </div>
                 {CartSidebarContent}
             </div>
