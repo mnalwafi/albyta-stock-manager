@@ -20,10 +20,9 @@ import { DollarSign, Package, AlertTriangle } from "lucide-react"
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export function DashboardAnalytics() {
-    // 1. Fetch Data Live
     const stocks = useLiveQuery(() => db.stocks.toArray())
 
-    if (!stocks) return <div className="h-40 flex items-center justify-center">Loading analytics...</div>
+    if (!stocks) return <div className="h-40 flex items-center justify-center">Memuat data...</div> // Translated
 
     // 2. Calculate KPI Metrics
     const totalProducts = stocks.length
@@ -32,11 +31,9 @@ export function DashboardAnalytics() {
         return acc + (item.price * item.quantity)
     }, 0)
 
-    const lowStockCount = stocks.filter(item => item.quantity < 10).length // Threshold: 10 units
+    const lowStockCount = stocks.filter(item => item.quantity < 10).length
 
     // 3. Prepare Data for Charts
-
-    // Group by Category for Pie Chart
     const categoryDataMap = stocks.reduce((acc: any, item) => {
         acc[item.category] = (acc[item.category] || 0) + item.quantity
         return acc
@@ -47,12 +44,10 @@ export function DashboardAnalytics() {
         value: categoryDataMap[key]
     }))
 
-    // Top 5 Items by Quantity for Bar Chart
     const barData = [...stocks]
         .sort((a, b) => b.quantity - a.quantity)
         .slice(0, 5)
 
-    // Helper for Currency
     const formatCurrency = (n: number) => new Intl.NumberFormat("id-ID", { notation: "standard" }).format(n)
 
     return (
@@ -62,39 +57,39 @@ export function DashboardAnalytics() {
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Asset Value</CardTitle>
+                        <CardTitle className="text-sm font-medium">Total Nilai Aset</CardTitle> {/* Translated */}
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{formatCurrency(totalValue)}</div>
                         <p className="text-xs text-muted-foreground">
-                            Based on current stock price
+                            Berdasarkan harga jual stok {/* Translated */}
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+                        <CardTitle className="text-sm font-medium">Total Produk</CardTitle> {/* Translated */}
                         <Package className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{totalProducts} Items</div>
+                        <div className="text-2xl font-bold">{totalProducts} Barang</div> {/* Translated */}
                         <p className="text-xs text-muted-foreground">
-                            In {Object.keys(categoryDataMap).length} categories
+                            Dalam {Object.keys(categoryDataMap).length} kategori {/* Translated */}
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Low Stock Alert</CardTitle>
+                        <CardTitle className="text-sm font-medium">Peringatan Stok</CardTitle> {/* Translated */}
                         <AlertTriangle className="h-4 w-4 text-red-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-red-600">{lowStockCount}</div>
                         <p className="text-xs text-muted-foreground">
-                            Items with &lt; 10 units
+                            Barang dengan stok &lt; 10 {/* Translated */}
                         </p>
                     </CardContent>
                 </Card>
@@ -103,10 +98,10 @@ export function DashboardAnalytics() {
             {/* --- CHARTS SECTION --- */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
 
-                {/* Bar Chart: Top Stock Levels */}
+                {/* Bar Chart */}
                 <Card className="col-span-4">
                     <CardHeader>
-                        <CardTitle>Highest Stock Levels</CardTitle>
+                        <CardTitle>Stok Terbanyak</CardTitle> {/* Translated */}
                     </CardHeader>
                     <CardContent className="pl-2">
                         <div className="h-[300px]">
@@ -138,10 +133,10 @@ export function DashboardAnalytics() {
                     </CardContent>
                 </Card>
 
-                {/* Pie Chart: Categories */}
+                {/* Pie Chart */}
                 <Card className="col-span-4 md:col-span-3">
                     <CardHeader>
-                        <CardTitle>Category Distribution</CardTitle>
+                        <CardTitle>Sebaran Kategori</CardTitle> {/* Translated */}
                     </CardHeader>
                     <CardContent>
                         <div className="h-[300px]">

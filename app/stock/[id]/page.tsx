@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { ArrowLeft, Save, Trash2, Minus, Plus, TrendingUp } from "lucide-react"
+import { Save, Minus, Plus, TrendingUp } from "lucide-react"
 
 export default function StockDetailPage() {
     const params = useParams()
@@ -25,10 +25,10 @@ export default function StockDetailPage() {
     const [unit, setUnit] = useState("")
 
     // --- PRICING STATE ---
-    const [price, setPrice] = useState(0) // Selling Price
+    const [price, setPrice] = useState(0)
     const [displayPrice, setDisplayPrice] = useState("")
 
-    const [costPrice, setCostPrice] = useState(0) // Capital Price (HPP)
+    const [costPrice, setCostPrice] = useState(0)
     const [displayCostPrice, setDisplayCostPrice] = useState("")
     const [minStock, setMinStock] = useState(0)
 
@@ -41,11 +41,9 @@ export default function StockDetailPage() {
             setCategory(stock.category)
             setUnit(stock.unit)
 
-            // Load Prices
             setPrice(stock.price)
             setDisplayPrice(stock.price.toLocaleString("id-ID"))
 
-            // Load Cost (Default to 0 if new)
             const cost = stock.costPrice || 0
             setCostPrice(cost)
             setDisplayCostPrice(cost.toLocaleString("id-ID"))
@@ -67,7 +65,7 @@ export default function StockDetailPage() {
         await db.stocks.update(id, {
             name, sku, category, unit, quantity,
             price,
-            costPrice, // We save the HPP now!
+            costPrice,
             minStock,
             updatedAt: new Date()
         })
@@ -81,11 +79,10 @@ export default function StockDetailPage() {
         await db.stocks.update(id, { quantity: newQty })
     }
 
-    // --- CALCULATE PROFIT PREVIEW ---
     const profitPerUnit = price - costPrice
     const margin = price > 0 ? (profitPerUnit / price) * 100 : 0
 
-    if (!stock) return <div className="p-10">Loading item...</div>
+    if (!stock) return <div className="p-10">Memuat data...</div> // Translated
 
     return (
         <div className="flex flex-1 flex-col gap-4 w-full mt-4">
@@ -107,22 +104,22 @@ export default function StockDetailPage() {
                 {/* --- LEFT: PRODUCT DETAILS FORM --- */}
                 <Card className="md:col-span-2">
                     <CardHeader>
-                        <CardTitle>Edit Product</CardTitle>
+                        <CardTitle>Edit Barang</CardTitle> {/* Translated */}
                     </CardHeader>
                     <CardContent className="space-y-6">
                         {/* Basic Info */}
                         <div className="grid gap-2">
-                            <Label>Product Name</Label>
+                            <Label>Nama Barang</Label> {/* Translated */}
                             <Input value={name} onChange={e => setName(e.target.value)} />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
-                                <Label>SKU</Label>
+                                <Label>SKU / Kode</Label> {/* Translated */}
                                 <Input value={sku} onChange={e => setSku(e.target.value)} />
                             </div>
                             <div className="grid gap-2">
-                                <Label>Category</Label>
+                                <Label>Kategori</Label> {/* Translated */}
                                 <Input value={category} onChange={e => setCategory(e.target.value)} />
                             </div>
                         </div>
@@ -132,13 +129,13 @@ export default function StockDetailPage() {
                         {/* --- PRICING SECTION (UPDATED) --- */}
                         <div className="space-y-4">
                             <h3 className="font-semibold flex items-center gap-2">
-                                <TrendingUp className="h-4 w-4" /> Pricing & Profit
+                                <TrendingUp className="h-4 w-4" /> Harga & Keuntungan {/* Translated */}
                             </h3>
 
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Capital Price (HPP) */}
                                 <div className="grid gap-2">
-                                    <Label className="text-muted-foreground">Capital Price (HPP)</Label>
+                                    <Label className="text-muted-foreground">Harga Modal (HPP)</Label> {/* Translated */}
                                     <div className="relative">
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">Rp</span>
                                         <Input
@@ -151,7 +148,7 @@ export default function StockDetailPage() {
 
                                 {/* Selling Price */}
                                 <div className="grid gap-2">
-                                    <Label>Selling Price</Label>
+                                    <Label>Harga Jual</Label> {/* Translated */}
                                     <div className="relative">
                                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">Rp</span>
                                         <Input
@@ -182,7 +179,7 @@ export default function StockDetailPage() {
 
                         <div className="flex gap-4 mt-6 pt-4 border-t">
                             <Button onClick={handleSave} className="w-full">
-                                <Save className="mr-2 h-4 w-4" /> Save Changes
+                                <Save className="mr-2 h-4 w-4" /> Simpan Perubahan {/* Translated */}
                             </Button>
                         </div>
                     </CardContent>
@@ -191,30 +188,30 @@ export default function StockDetailPage() {
                 {/* --- RIGHT: STOCK CONTROL --- */}
                 <Card className="h-fit">
                     <CardHeader>
-                        <CardTitle>Inventory Level</CardTitle>
-                        <CardDescription>Quick adjust stock count</CardDescription>
+                        <CardTitle>Jumlah Stok</CardTitle> {/* Translated */}
+                        <CardDescription>Sesuaikan stok secara manual</CardDescription> {/* Translated */}
                     </CardHeader>
                     <CardContent className="space-y-6 text-center">
                         <div className="py-4">
                             <div className="text-6xl font-bold text-slate-800 tracking-tighter">
                                 {quantity}
                             </div>
-                            <div className="text-sm font-medium text-slate-500 uppercase mt-1">{unit || "Units"}</div>
+                            <div className="text-sm font-medium text-slate-500 uppercase mt-1">{unit || "Unit"}</div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
                             <Button variant="outline" className="h-12" onClick={() => adjustStock(-1)}>
-                                <Minus className="mr-2 h-4 w-4" /> Remove
+                                <Minus className="mr-2 h-4 w-4" /> Kurang {/* Translated */}
                             </Button>
                             <Button variant="outline" className="h-12" onClick={() => adjustStock(1)}>
-                                <Plus className="mr-2 h-4 w-4" /> Add
+                                <Plus className="mr-2 h-4 w-4" /> Tambah {/* Translated */}
                             </Button>
                         </div>
 
                         <div className="pt-4 border-t mt-4">
-                            <Label className="text-xs text-muted-foreground mb-2 block">Alert Threshold (Min Stock)</Label>
+                            <Label className="text-xs text-muted-foreground mb-2 block">Batas Peringatan (Min Stok)</Label> {/* Translated */}
                             <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">Alert when below:</span>
+                                <span className="text-sm text-muted-foreground">Alert jika &lt;:</span>
                                 <Input
                                     type="number"
                                     className="w-20 text-center"
@@ -225,7 +222,7 @@ export default function StockDetailPage() {
                         </div>
 
                         <div className="pt-4">
-                            <Label className="text-xs text-muted-foreground mb-2 block">Manual Override</Label>
+                            <Label className="text-xs text-muted-foreground mb-2 block">Edit Manual</Label> {/* Translated */}
                             <Input
                                 type="number"
                                 className="text-center"

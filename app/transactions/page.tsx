@@ -12,7 +12,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Receipt, Trash2, AlertTriangle } from "lucide-react"
+import { Receipt, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export default function TransactionHistoryPage() {
@@ -25,24 +25,20 @@ export default function TransactionHistoryPage() {
     const formatMoney = (n: number) =>
         new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(n)
 
-    // --- THE NEW DELETE LOGIC ---
     const handleVoidTransaction = async (txId: number) => {
         const confirmed = confirm(
-            "⚠️ VOID TRANSACTION?\n\nThis will delete the record AND restore the items to your inventory.\n\nAre you sure?"
+            "⚠️ BATALKAN TRANSAKSI?\n\nIni akan menghapus catatan DAN mengembalikan stok ke inventaris.\n\nApakah Anda yakin?" // Translated
         )
 
         if (!confirmed) return
 
         try {
             await db.transaction('rw', db.stocks, db.transactions, async () => {
-                // 1. Get the transaction details
                 const tx = await db.transactions.get(txId)
                 if (!tx) throw new Error("Transaction not found")
 
-                // 2. Loop through items and RESTORE stock
                 for (const item of tx.items) {
                     const stockItem = await db.stocks.get(item.stockId)
-                    // Only restore if the item still exists in DB
                     if (stockItem) {
                         await db.stocks.update(item.stockId, {
                             quantity: stockItem.quantity + item.qty
@@ -50,17 +46,16 @@ export default function TransactionHistoryPage() {
                     }
                 }
 
-                // 3. Delete the log
                 await db.transactions.delete(txId)
             })
-            alert("Transaction voided and stock restored.")
+            alert("Transaksi dibatalkan dan stok dikembalikan.") // Translated
         } catch (error) {
             console.error(error)
-            alert("Failed to void transaction.")
+            alert("Gagal membatalkan transaksi.") // Translated
         }
     }
 
-    if (!transactions) return <div className="p-10">Loading history...</div>
+    if (!transactions) return <div className="p-10">Memuat riwayat...</div> // Translated
 
     return (
         <div className="flex flex-1 flex-col gap-4 mt-4">
@@ -68,10 +63,10 @@ export default function TransactionHistoryPage() {
             <div className="flex items-center gap-4 mb-8">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <Receipt className="h-6 w-6" /> Transaction History
+                        <Receipt className="h-6 w-6" /> Riwayat Transaksi {/* Translated */}
                     </h1>
                     <p className="text-muted-foreground text-sm">
-                        Log of all completed sales.
+                        Catatan semua penjualan yang selesai. {/* Translated */}
                     </p>
                 </div>
             </div>
@@ -80,18 +75,18 @@ export default function TransactionHistoryPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[180px]">Date & Time</TableHead>
-                            <TableHead>Items Sold</TableHead>
+                            <TableHead className="w-[180px]">Waktu</TableHead> {/* Translated */}
+                            <TableHead>Barang Terjual</TableHead> {/* Translated */}
                             <TableHead className="text-right">Total</TableHead>
-                            <TableHead className="text-right">Cash / Change</TableHead>
-                            <TableHead className="text-center">Action</TableHead>
+                            <TableHead className="text-right">Tunai / Kembalian</TableHead> {/* Translated */}
+                            <TableHead className="text-center">Aksi</TableHead> {/* Translated */}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {transactions.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                                    No transactions recorded yet.
+                                    Belum ada transaksi tercatat. {/* Translated */}
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -119,17 +114,16 @@ export default function TransactionHistoryPage() {
                                     </TableCell>
 
                                     <TableCell className="text-right text-xs text-muted-foreground">
-                                        <div>Cash: {formatMoney(tx.payment)}</div>
-                                        <div>Change: {formatMoney(tx.change)}</div>
+                                        <div>Tunai: {formatMoney(tx.payment)}</div> {/* Translated */}
+                                        <div>Kembali: {formatMoney(tx.change)}</div> {/* Translated */}
                                     </TableCell>
 
-                                    {/* DELETE BUTTON */}
                                     <TableCell className="text-center">
                                         <Button
                                             variant="ghost"
                                             size="icon"
                                             className="text-red-500 hover:bg-red-50"
-                                            title="Void Transaction (Restores Stock)"
+                                            title="Batalkan Transaksi (Kembalikan Stok)" // Translated
                                             onClick={() => handleVoidTransaction(tx.id)}
                                         >
                                             <Trash2 className="h-4 w-4" />

@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Trash2, Users, Plus } from "lucide-react"
-import { ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export default function CustomersPage() {
@@ -31,7 +30,7 @@ export default function CustomersPage() {
     }
 
     const handleDelete = async (id: number) => {
-        if (confirm("Delete this customer? History will be preserved but customer data removed.")) {
+        if (confirm("Hapus pelanggan ini? Riwayat transaksi tetap ada, tapi data kontak akan hilang.")) { // Translated
             await db.customers.delete(id)
         }
     }
@@ -44,21 +43,21 @@ export default function CustomersPage() {
                 <div className="flex items-center gap-4">
                     <div>
                         <h1 className="text-2xl font-bold flex items-center gap-2">
-                            <Users className="h-6 w-6" /> Customer List
+                            <Users className="h-6 w-6" /> Daftar Pelanggan {/* Translated */}
                         </h1>
-                        <p className="text-muted-foreground text-sm">Manage debt and contacts</p>
+                        <p className="text-muted-foreground text-sm">Kelola kontak dan hutang piutang</p> {/* Translated */}
                     </div>
                 </div>
 
                 {/* Add Customer Dialog */}
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                    <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Customer</Button></DialogTrigger>
+                    <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Tambah Pelanggan</Button></DialogTrigger> {/* Translated */}
                     <DialogContent>
-                        <DialogHeader><DialogTitle>New Customer</DialogTitle></DialogHeader>
+                        <DialogHeader><DialogTitle>Pelanggan Baru</DialogTitle></DialogHeader> {/* Translated */}
                         <form onSubmit={handleAddCustomer} className="space-y-4">
-                            <Input placeholder="Name (e.g. Pak Budi)" value={newName} onChange={e => setNewName(e.target.value)} required />
-                            <Input placeholder="Phone (Optional)" value={newPhone} onChange={e => setNewPhone(e.target.value)} />
-                            <Button type="submit" className="w-full">Save Customer</Button>
+                            <Input placeholder="Nama (Contoh: Pak Budi)" value={newName} onChange={e => setNewName(e.target.value)} required /> {/* Translated */}
+                            <Input placeholder="Telepon / WA (Opsional)" value={newPhone} onChange={e => setNewPhone(e.target.value)} /> {/* Translated */}
+                            <Button type="submit" className="w-full">Simpan</Button> {/* Translated */}
                         </form>
                     </DialogContent>
                 </Dialog>
@@ -68,10 +67,10 @@ export default function CustomersPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Phone</TableHead>
-                            <TableHead className="text-right">Current Debt (Kasbon)</TableHead>
-                            <TableHead className="text-center">Action</TableHead>
+                            <TableHead>Nama</TableHead> {/* Translated */}
+                            <TableHead>Telepon</TableHead> {/* Translated */}
+                            <TableHead className="text-right">Total Kasbon (Hutang)</TableHead> {/* Translated */}
+                            <TableHead className="text-center">Aksi</TableHead> {/* Translated */}
                         </TableRow>
                     </TableHeader>
                     <TableBody>

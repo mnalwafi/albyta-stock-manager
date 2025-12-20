@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { ArrowLeft, Book, HandCoins } from "lucide-react"
+import { Book, HandCoins } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Label } from "@/components/ui/label"
 
@@ -55,10 +55,10 @@ export default function DebtBookPage() {
             <div className="flex items-center gap-4 mb-8">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <Book className="h-6 w-6" /> Buku Kasbon (Debt Book)
+                        <Book className="h-6 w-6" /> Buku Kasbon (Hutang) {/* Translated */}
                     </h1>
                     <p className="text-muted-foreground text-sm">
-                        Manage customers debt operation.
+                        Kelola data hutang pelanggan. {/* Translated */}
                     </p>
                 </div>
             </div>
@@ -66,12 +66,12 @@ export default function DebtBookPage() {
             {/* Summary Card */}
             <Card className="mb-8 bg-red-50 border-red-200">
                 <CardHeader className="pb-2">
-                    <CardTitle className="text-red-800 text-sm font-medium">Total Outstanding Debt</CardTitle>
+                    <CardTitle className="text-red-800 text-sm font-medium">Total Hutang Belum Lunas</CardTitle> {/* Translated */}
                 </CardHeader>
                 <CardContent>
                     <div className="text-3xl font-bold text-red-700">Rp {formatMoney(totalOutstanding)}</div>
                     <p className="text-sm text-red-600 mt-1">
-                        Money owed by {customersWithDebt?.length || 0} customers
+                        Dari {customersWithDebt?.length || 0} pelanggan {/* Translated */}
                     </p>
                 </CardContent>
             </Card>
@@ -81,15 +81,15 @@ export default function DebtBookPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Customer Name</TableHead>
-                            <TableHead>Phone</TableHead>
-                            <TableHead className="text-right">Debt Amount</TableHead>
-                            <TableHead className="text-right">Action</TableHead>
+                            <TableHead>Nama Pelanggan</TableHead> {/* Translated */}
+                            <TableHead>Telepon</TableHead> {/* Translated */}
+                            <TableHead className="text-right">Jumlah Hutang</TableHead> {/* Translated */}
+                            <TableHead className="text-right">Aksi</TableHead> {/* Translated */}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {customersWithDebt?.length === 0 ? (
-                            <TableRow><TableCell colSpan={4} className="text-center py-8">No active debts.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={4} className="text-center py-8">Tidak ada hutang aktif.</TableCell></TableRow> // Translated
                         ) : (
                             customersWithDebt?.map(c => (
                                 <TableRow key={c.id}>
@@ -105,27 +105,27 @@ export default function DebtBookPage() {
                                         }}>
                                             <DialogTrigger asChild>
                                                 <Button size="sm" variant="outline" className="border-green-200 hover:bg-green-50 text-green-700">
-                                                    <HandCoins className="mr-2 h-4 w-4" /> Pay
+                                                    <HandCoins className="mr-2 h-4 w-4" /> Bayar {/* Translated */}
                                                 </Button>
                                             </DialogTrigger>
                                             <DialogContent>
-                                                <DialogHeader><DialogTitle>Repayment: {c.name}</DialogTitle></DialogHeader>
+                                                <DialogHeader><DialogTitle>Pembayaran: {c.name}</DialogTitle></DialogHeader> {/* Translated */}
                                                 <div className="py-4 text-center">
-                                                    <div className="text-sm text-muted-foreground">Total Owed</div>
+                                                    <div className="text-sm text-muted-foreground">Total Hutang</div> {/* Translated */}
                                                     <div className="text-3xl font-bold text-red-600 mb-4">Rp {formatMoney(c.totalDebt)}</div>
 
                                                     <form onSubmit={handleRepay} className="space-y-4 text-left">
-                                                        <Label>Payment Amount</Label>
+                                                        <Label>Jumlah Bayar</Label> {/* Translated */}
                                                         <Input
                                                             type="number"
-                                                            placeholder="Enter amount..."
+                                                            placeholder="Masukkan jumlah..."
                                                             value={repayAmount || ""}
                                                             onChange={e => setRepayAmount(Number(e.target.value))}
                                                             max={c.totalDebt}
                                                             required
                                                         />
                                                         <Button type="submit" className="w-full bg-green-600 hover:bg-green-700">
-                                                            Confirm Payment
+                                                            Konfirmasi Pembayaran {/* Translated */}
                                                         </Button>
                                                     </form>
                                                 </div>

@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowLeft, Calendar, BarChart3, DollarSign, PieChart, Download } from "lucide-react"
+import { Calendar, BarChart3, DollarSign, PieChart, Download } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { startOfMonth, endOfMonth, isWithinInterval, format } from "date-fns"
-import * as XLSX from "xlsx" // IMPORT THE LIBRARY
+import * as XLSX from "xlsx"
 
 export default function ReportsPage() {
     const router = useRouter()
@@ -43,7 +43,6 @@ export default function ReportsPage() {
 
         const getCategory = (id: number) => stocks.find(s => s.id === id)?.category || "Uncategorized"
 
-        // Enhanced Transaction List for Excel
         const detailedTxRows = filteredTx.map(tx => {
             let txCost = 0
             const itemNames = tx.items.map(i => {
@@ -56,11 +55,10 @@ export default function ReportsPage() {
 
             tx.items.forEach(item => {
                 itemsSold += item.qty
-                // Product breakdown
                 if (!productSales[item.name]) productSales[item.name] = { qty: 0, revenue: 0 }
                 productSales[item.name].qty += item.qty
                 productSales[item.name].revenue += (item.price * item.qty)
-                // Category breakdown
+                
                 const cat = getCategory(item.stockId)
                 categorySales[cat] = (categorySales[cat] || 0) + (item.price * item.qty)
             })
@@ -78,7 +76,6 @@ export default function ReportsPage() {
         const grossProfit = revenue - cogs
         const margin = revenue > 0 ? (grossProfit / revenue) * 100 : 0
 
-        // Sort for UI
         const topProducts = Object.entries(productSales)
             .map(([name, data]) => ({ name, ...data }))
             .sort((a, b) => b.revenue - a.revenue)
@@ -99,13 +96,12 @@ export default function ReportsPage() {
     const handleDownloadExcel = () => {
         if (!reportData || !stocks) return
 
-        // Sheet 1: Summary
         const summaryData = [
             { Metric: "Report Period", Value: timeRange === 'this-month' ? "This Month" : "All Time" },
             { Metric: "Generated At", Value: format(new Date(), "yyyy-MM-dd HH:mm") },
-            {}, // Empty row
+            {}, 
             { Metric: "Total Revenue", Value: reportData.revenue },
-            { Metric: "Cost of Goods Sold", Value: reportData.cogs },
+            { Metric: "Cost of Goods Sold (HPP)", Value: reportData.cogs },
             { Metric: "Gross Profit", Value: reportData.grossProfit },
             { Metric: "Net Margin (%)", Value: `${reportData.margin.toFixed(2)}%` },
             { Metric: "Transactions Count", Value: reportData.count },
@@ -113,10 +109,8 @@ export default function ReportsPage() {
         ]
         const sheetSummary = XLSX.utils.json_to_sheet(summaryData)
 
-        // Sheet 2: Transactions (Detailed)
         const sheetSales = XLSX.utils.json_to_sheet(reportData.detailedTxRows)
 
-        // Sheet 3: Current Inventory Snapshot
         const inventoryRows = stocks.map(s => ({
             ID: s.id,
             Name: s.name,
@@ -129,20 +123,18 @@ export default function ReportsPage() {
         }))
         const sheetInventory = XLSX.utils.json_to_sheet(inventoryRows)
 
-        // Create Workbook
         const workbook = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(workbook, sheetSummary, "Summary")
-        XLSX.utils.book_append_sheet(workbook, sheetSales, "Sales Log")
-        XLSX.utils.book_append_sheet(workbook, sheetInventory, "Inventory Status")
+        XLSX.utils.book_append_sheet(workbook, sheetSummary, "Ringkasan")
+        XLSX.utils.book_append_sheet(workbook, sheetSales, "Log Penjualan")
+        XLSX.utils.book_append_sheet(workbook, sheetInventory, "Status Stok")
 
-        // Download
-        XLSX.writeFile(workbook, `Business_Report_${format(new Date(), "yyyy-MM-dd")}.xlsx`)
+        XLSX.writeFile(workbook, `Laporan_Keuangan_${format(new Date(), "yyyy-MM-dd")}.xlsx`)
     }
 
 
     const formatMoney = (n: number) => new Intl.NumberFormat("id-ID").format(n)
 
-    if (!reportData) return <div className="p-10">Generating Report...</div>
+    if (!reportData) return <div className="p-10">Menyiapkan Laporan...</div> // Translated
 
     return (
         <div className="flex flex-1 flex-col gap-4 mt-4">
@@ -150,10 +142,10 @@ export default function ReportsPage() {
                 <div className="flex items-center gap-4">
                     <div>
                         <h1 className="text-2xl font-bold flex items-center gap-2">
-                            <BarChart3 className="h-6 w-6" /> Financial Reports
+                            <BarChart3 className="h-6 w-6" /> Laporan Keuangan {/* Translated */}
                         </h1>
                         <p className="text-muted-foreground text-sm">
-                            Analyze your profit and performance.
+                            Analisa keuntungan dan performa toko. {/* Translated */}
                         </p>
                     </div>
                 </div>
@@ -165,40 +157,40 @@ export default function ReportsPage() {
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="this-month">This Month</SelectItem>
-                            <SelectItem value="all-time">All Time</SelectItem>
+                            <SelectItem value="this-month">Bulan Ini</SelectItem> {/* Translated */}
+                            <SelectItem value="all-time">Semua Waktu</SelectItem> {/* Translated */}
                         </SelectContent>
                     </Select>
                 </div>
             </div>
 
-            {/* P&L Cards (Existing code...) */}
+            {/* P&L Cards */}
             <div className="grid gap-4 md:grid-cols-4 mb-8">
                 <Card className="bg-slate-900 text-white">
-                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-slate-400">Total Revenue</CardTitle></CardHeader>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-slate-400">Total Pendapatan</CardTitle></CardHeader> {/* Translated */}
                     <CardContent><div className="text-2xl font-bold">Rp {formatMoney(reportData.revenue)}</div></CardContent>
                 </Card>
                 <Card>
-                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">COGS (Modal)</CardTitle></CardHeader>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Modal (HPP)</CardTitle></CardHeader> {/* Translated */}
                     <CardContent><div className="text-2xl font-bold text-slate-700">Rp {formatMoney(reportData.cogs)}</div></CardContent>
                 </Card>
                 <Card className={reportData.grossProfit >= 0 ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}>
-                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-green-800">Gross Profit</CardTitle></CardHeader>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-green-800">Laba Kotor</CardTitle></CardHeader> {/* Translated */}
                     <CardContent><div className={`text-2xl font-bold ${reportData.grossProfit >= 0 ? "text-green-700" : "text-red-700"}`}>Rp {formatMoney(reportData.grossProfit)}</div></CardContent>
                 </Card>
                 <Card>
-                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Net Margin</CardTitle></CardHeader>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Margin Bersih</CardTitle></CardHeader> {/* Translated */}
                     <CardContent><div className="text-2xl font-bold text-blue-600">{reportData.margin.toFixed(1)}%</div></CardContent>
                 </Card>
             </div>
 
-            {/* Tables (Existing code...) */}
+            {/* Tables */}
             <div className="grid md:grid-cols-2 gap-6 mb-8">
                 <Card>
-                    <CardHeader><CardTitle className="flex items-center gap-2 text-base"><DollarSign className="h-4 w-4" /> Best Selling Products</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="flex items-center gap-2 text-base"><DollarSign className="h-4 w-4" /> Produk Terlaris</CardTitle></CardHeader> {/* Translated */}
                     <CardContent>
                         <Table>
-                            <TableHeader><TableRow><TableHead>Item</TableHead><TableHead className="text-right">Revenue</TableHead></TableRow></TableHeader>
+                            <TableHeader><TableRow><TableHead>Nama Barang</TableHead><TableHead className="text-right">Pendapatan</TableHead></TableRow></TableHeader> {/* Translated */}
                             <TableBody>
                                 {reportData.topProducts.map((p, i) => (
                                     <TableRow key={i}><TableCell className="font-medium">{p.name}</TableCell><TableCell className="text-right">Rp {formatMoney(p.revenue)}</TableCell></TableRow>
@@ -208,10 +200,10 @@ export default function ReportsPage() {
                     </CardContent>
                 </Card>
                 <Card>
-                    <CardHeader><CardTitle className="flex items-center gap-2 text-base"><PieChart className="h-4 w-4" /> Sales by Category</CardTitle></CardHeader>
+                    <CardHeader><CardTitle className="flex items-center gap-2 text-base"><PieChart className="h-4 w-4" /> Penjualan per Kategori</CardTitle></CardHeader> {/* Translated */}
                     <CardContent>
                         <Table>
-                            <TableHeader><TableRow><TableHead>Category</TableHead><TableHead className="text-right">%</TableHead></TableRow></TableHeader>
+                            <TableHeader><TableRow><TableHead>Kategori</TableHead><TableHead className="text-right">%</TableHead></TableRow></TableHeader> {/* Translated */}
                             <TableBody>
                                 {reportData.topCategories.map((c, i) => (
                                     <TableRow key={i}><TableCell className="font-medium">{c.name}</TableCell><TableCell className="text-right">{reportData.revenue > 0 ? ((c.total / reportData.revenue) * 100).toFixed(0) : 0}%</TableCell></TableRow>
@@ -222,17 +214,17 @@ export default function ReportsPage() {
                 </Card>
             </div>
 
-            {/* --- EXCEL BUTTON (UPDATED) --- */}
+            {/* --- EXCEL BUTTON --- */}
             <div className="mt-8 text-center">
                 <Button
                     onClick={handleDownloadExcel}
                     className="gap-2 bg-green-600 hover:bg-green-700 text-white"
                 >
                     <Download className="h-4 w-4" />
-                    Download Excel Report (.xlsx)
+                    Unduh Laporan Excel (.xlsx) {/* Translated */}
                 </Button>
                 <p className="text-xs text-muted-foreground mt-2">
-                    Includes: Summary, Transaction Log, and Inventory Status.
+                    Termasuk: Ringkasan, Log Transaksi, dan Status Stok Gudang. {/* Translated */}
                 </p>
             </div>
         </div>

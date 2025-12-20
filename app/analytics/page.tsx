@@ -5,11 +5,12 @@ import { useLiveQuery } from "dexie-react-hooks"
 import { db } from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import {
-    Line, BarChart, Bar, PieChart, Pie, Cell,
+    BarChart, Bar, PieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area
 } from "recharts"
 import { TrendingUp, ShoppingCart, Wallet, LineChart } from "lucide-react"
-import { format, subDays, isSameDay, startOfDay } from "date-fns"
+import { format, subDays, isSameDay } from "date-fns"
+import { id as idLocale } from "date-fns/locale" // Optional: for proper date formatting
 
 const COLORS = ['#0ea5e9', '#22c55e', '#eab308', '#f97316', '#ef4444', '#8b5cf6']
 
@@ -41,7 +42,7 @@ export default function AnalyticsPage() {
             }, 0)
 
             return {
-                date: format(date, "dd MMM"),
+                date: format(date, "dd MMM", { locale: idLocale }), // Use ID locale if installed, otherwise remove locale
                 revenue: dailyTotal,
                 profit: dailyProfit
             }
@@ -51,7 +52,6 @@ export default function AnalyticsPage() {
         const categoryMap: Record<string, number> = {}
         transactions.forEach(tx => {
             tx.items.forEach(item => {
-                // Find original category from stock list (snapshot doesn't have category usually)
                 const stock = stocks.find(s => s.id === item.stockId)
                 const cat = stock?.category || "Uncategorized"
                 categoryMap[cat] = (categoryMap[cat] || 0) + (item.price * item.qty)
@@ -62,12 +62,11 @@ export default function AnalyticsPage() {
             .map(([name, value]) => ({ name, value }))
             .sort((a, b) => b.value - a.value)
 
-        // 4. CHART: Hourly Activity (Heatmap-ish)
-        // Group sales by Hour (00:00 - 23:00) to see "Busy Hours"
+        // 4. CHART: Hourly Activity
         const hoursMap = new Array(24).fill(0)
         transactions.forEach(tx => {
             const hour = new Date(tx.date).getHours()
-            hoursMap[hour] += 1 // Count transactions
+            hoursMap[hour] += 1
         })
         const hourlyData = hoursMap.map((count, hour) => ({
             hour: `${hour}:00`,
@@ -86,7 +85,7 @@ export default function AnalyticsPage() {
 
     const formatMoney = (n: number) => new Intl.NumberFormat("id-ID", { notation: "compact" }).format(n)
 
-    if (!analytics) return <div className="p-10">Loading Analytics...</div>
+    if (!analytics) return <div className="p-10">Memuat Analitik...</div> // Translated
 
     return (
         <div className="flex flex-1 flex-col gap-6 mt-4">
@@ -95,9 +94,9 @@ export default function AnalyticsPage() {
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
                         <LineChart className="h-6 w-6" />
-                        Business Analytics
+                        Analitik Bisnis {/* Translated */}
                     </h1>
-                    <p className="text-muted-foreground text-sm">Visual insights into your store performance.</p>
+                    <p className="text-muted-foreground text-sm">Wawasan visual performa toko Anda.</p> {/* Translated */}
                 </div>
             </div>
 
@@ -105,32 +104,32 @@ export default function AnalyticsPage() {
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Avg. Order Value</CardTitle>
+                        <CardTitle className="text-sm font-medium">Rata-rata Order</CardTitle> {/* Translated */}
                         <Wallet className="h-4 w-4 text-blue-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">Rp {formatMoney(analytics.avgOrderValue)}</div>
-                        <p className="text-xs text-muted-foreground">Average spend per customer</p>
+                        <p className="text-xs text-muted-foreground">Per transaksi pelanggan</p> {/* Translated */}
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
+                        <CardTitle className="text-sm font-medium">Total Transaksi</CardTitle> {/* Translated */}
                         <ShoppingCart className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{analytics.totalTx}</div>
-                        <p className="text-xs text-muted-foreground">Lifetime sales count</p>
+                        <p className="text-xs text-muted-foreground">Jumlah penjualan seumur hidup</p> {/* Translated */}
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Revenue Growth</CardTitle>
+                        <CardTitle className="text-sm font-medium">Total Omzet</CardTitle> {/* Translated */}
                         <TrendingUp className="h-4 w-4 text-purple-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">Rp {formatMoney(analytics.totalRevenue)}</div>
-                        <p className="text-xs text-muted-foreground">Lifetime Revenue</p>
+                        <p className="text-xs text-muted-foreground">Total Pendapatan Masuk</p> {/* Translated */}
                     </CardContent>
                 </Card>
             </div>
@@ -138,8 +137,8 @@ export default function AnalyticsPage() {
             {/* ROW 2: MAIN TREND CHART */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Revenue & Profit Trend (Last 7 Days)</CardTitle>
-                    <CardDescription>Daily performance comparison</CardDescription>
+                    <CardTitle>Tren Omzet & Profit (7 Hari Terakhir)</CardTitle> {/* Translated */}
+                    <CardDescription>Perbandingan performa harian</CardDescription> {/* Translated */}
                 </CardHeader>
                 <CardContent>
                     <div className="h-[350px] w-full">
@@ -159,8 +158,8 @@ export default function AnalyticsPage() {
                                 <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `${val / 1000}k`} />
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <Tooltip />
-                                <Area type="monotone" dataKey="revenue" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorRv)" name="Revenue" />
-                                <Area type="monotone" dataKey="profit" stroke="#22c55e" fillOpacity={1} fill="url(#colorPf)" name="Profit" />
+                                <Area type="monotone" dataKey="revenue" stroke="#0ea5e9" fillOpacity={1} fill="url(#colorRv)" name="Omzet" /> {/* Translated name prop */}
+                                <Area type="monotone" dataKey="profit" stroke="#22c55e" fillOpacity={1} fill="url(#colorPf)" name="Untung" /> {/* Translated name prop */}
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -173,8 +172,8 @@ export default function AnalyticsPage() {
                 {/* CATEGORY PIE */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Sales by Category</CardTitle>
-                        <CardDescription>Which product groups earn the most?</CardDescription>
+                        <CardTitle>Penjualan per Kategori</CardTitle> {/* Translated */}
+                        <CardDescription>Grup produk mana yang paling laris?</CardDescription> {/* Translated */}
                     </CardHeader>
                     <CardContent>
                         <div className="h-[300px] w-full">
@@ -212,8 +211,8 @@ export default function AnalyticsPage() {
                 {/* HOURLY ACTIVITY BAR */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Store Busy Hours</CardTitle>
-                        <CardDescription>Transaction count by hour of day</CardDescription>
+                        <CardTitle>Jam Sibuk Toko</CardTitle> {/* Translated */}
+                        <CardDescription>Jumlah transaksi berdasarkan jam</CardDescription> {/* Translated */}
                     </CardHeader>
                     <CardContent className="-ml-6 pl-0">
                         <div className="h-[300px] w-full">
@@ -223,7 +222,7 @@ export default function AnalyticsPage() {
                                     <XAxis dataKey="hour" fontSize={12} tickLine={false} axisLine={false} />
                                     <YAxis fontSize={12} tickLine={false} axisLine={false} />
                                     <Tooltip cursor={{ fill: 'transparent' }} />
-                                    <Bar dataKey="transactions" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="transactions" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Transaksi" /> {/* Added translated name */}
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>

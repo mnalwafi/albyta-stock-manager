@@ -23,7 +23,6 @@ import {
     TableRow,
 } from "@/components/ui/table"
 
-// Helper to format currency
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
         style: "currency",
@@ -36,11 +35,10 @@ export function StockTable() {
     const router = useRouter()
     const stocks = useLiveQuery(() => db.stocks.toArray())
 
-    // Local State for Filtering
     const [searchTerm, setSearchTerm] = useState("")
     const [categoryFilter, setCategoryFilter] = useState("All")
 
-    if (!stocks) return <div className="text-center py-10">Loading data...</div>
+    if (!stocks) return <div className="text-center py-10">Memuat data...</div> // Translated
 
     const uniqueCategories = ["All", ...Array.from(new Set(stocks.map(item => item.category))).filter(Boolean)]
 
@@ -59,7 +57,7 @@ export function StockTable() {
                 <div className="relative w-full sm:w-72">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search name or SKU..."
+                        placeholder="Cari Nama atau SKU..." // Translated
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-8"
@@ -70,13 +68,13 @@ export function StockTable() {
                         <SelectTrigger>
                             <div className="flex items-center gap-2">
                                 <Filter className="h-4 w-4" />
-                                <SelectValue placeholder="Filter Category" />
+                                <SelectValue placeholder="Filter Kategori" /> {/* Translated */}
                             </div>
                         </SelectTrigger>
                         <SelectContent>
                             {uniqueCategories.map((cat) => (
                                 <SelectItem key={cat} value={cat}>
-                                    {cat === "All" ? "All Categories" : cat}
+                                    {cat === "All" ? "Semua Kategori" : cat} {/* Translated */}
                                 </SelectItem>
                             ))}
                         </SelectContent>
@@ -89,20 +87,20 @@ export function StockTable() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead className="text-right">Qty</TableHead>
-                            <TableHead className="text-right">Cost (HPP)</TableHead>
-                            <TableHead className="text-right">Price</TableHead>
-                            <TableHead className="text-right">Value</TableHead>
-                            <TableHead className="text-center">Actions</TableHead>
+                            <TableHead>Nama Barang</TableHead> {/* Translated */}
+                            <TableHead>Kategori</TableHead>
+                            <TableHead className="text-right">Stok</TableHead> {/* Translated */}
+                            <TableHead className="text-right">Modal (HPP)</TableHead> {/* Translated */}
+                            <TableHead className="text-right">Harga Jual</TableHead> {/* Translated */}
+                            <TableHead className="text-right">Nilai Aset</TableHead> {/* Translated */}
+                            <TableHead className="text-center">Aksi</TableHead> {/* Translated */}
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredStocks.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={7} className="text-center h-32 text-muted-foreground">
-                                    No items found.
+                                    Barang tidak ditemukan. {/* Translated */}
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -121,7 +119,6 @@ export function StockTable() {
                                         {stock.quantity} <span className="text-xs text-muted-foreground">{stock.unit}</span>
                                     </TableCell>
 
-                                    {/* NEW COST DATA */}
                                     <TableCell className="text-right text-muted-foreground text-sm">
                                         {stock.costPrice ? formatCurrency(stock.costPrice) : "-"}
                                     </TableCell>
@@ -148,7 +145,7 @@ export function StockTable() {
                                             size="icon"
                                             className="text-red-500 hover:text-red-700 hover:bg-red-50"
                                             onClick={() => {
-                                                if (confirm('Delete this item?')) {
+                                                if (confirm('Hapus barang ini?')) { // Translated
                                                     db.stocks.delete(stock.id)
                                                 }
                                             }}
@@ -163,10 +160,11 @@ export function StockTable() {
                 </Table>
             </div>
 
+            {/* Mobile View (Optional Update) */}
             <div className="grid grid-cols-1 gap-4 md:hidden">
                 {filteredStocks.length === 0 ? (
                     <div className="text-center py-10 text-muted-foreground border rounded-md bg-slate-50">
-                        No items found.
+                        Barang tidak ditemukan. {/* Translated */}
                     </div>
                 ) : (
                     filteredStocks.map(stock => (
@@ -182,23 +180,24 @@ export function StockTable() {
                             </div>
 
                             <div className="flex justify-between text-sm">
-                                <div className="text-muted-foreground">Stock:</div>
+                                <div className="text-muted-foreground">Stok:</div>
                                 <div className={stock.quantity <= stock.minStock ? "text-red-600 font-bold" : "font-medium"}>
                                     {stock.quantity} {stock.unit}
                                 </div>
                             </div>
 
                             <div className="flex justify-between text-sm">
-                                <div className="text-muted-foreground">Price:</div>
+                                <div className="text-muted-foreground">Harga:</div>
                                 <div className="font-bold">{formatCurrency(stock.price)}</div>
                             </div>
 
-                            {/* Action Buttons Row */}
                             <div className="pt-3 border-t flex gap-2">
                                 <Button variant="outline" size="sm" className="flex-1" onClick={() => router.push(`/stock/${stock.id}`)}>
                                     <Pencil className="mr-2 h-3 w-3" /> Edit
                                 </Button>
-                                <Button variant="outline" size="sm" className="text-red-600 border-red-200" onClick={() => { /* delete logic */ }}>
+                                <Button variant="outline" size="sm" className="text-red-600 border-red-200" onClick={() => {
+                                    if (confirm('Hapus barang ini?')) db.stocks.delete(stock.id)
+                                }}>
                                     <Trash2 className="h-3 w-3" />
                                 </Button>
                             </div>
@@ -208,7 +207,7 @@ export function StockTable() {
             </div>
 
             <div className="text-xs text-muted-foreground">
-                Showing {filteredStocks.length} items
+                Menampilkan {filteredStocks.length} barang {/* Translated */}
             </div>
         </div>
     )

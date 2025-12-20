@@ -31,15 +31,15 @@ export function BackupManager() {
             const link = document.createElement('a')
             link.href = url
             const dateStr = new Date().toISOString().split('T')[0]
-            link.download = `stock-backup-${dateStr}.json`
+            link.download = `backup-stok-${dateStr}.json`
             document.body.appendChild(link)
             link.click()
             document.body.removeChild(link)
 
-            alert("Backup downloaded successfully!")
+            alert("Backup berhasil diunduh!") // Translated
         } catch (error) {
             console.error("Export failed:", error)
-            alert("Failed to export data.")
+            alert("Gagal mengekspor data.") // Translated
         }
     }
 
@@ -49,11 +49,11 @@ export function BackupManager() {
         if (!file) return
 
         const confirmed = confirm(
-            "⚠️ DANGER ZONE: This will WIPE your current data and replace it with the backup file.\n\nAre you sure you want to proceed?"
+            "⚠️ PERINGATAN: Ini akan MENGHAPUS data saat ini dan menggantinya dengan file backup.\n\nApakah Anda yakin ingin melanjutkan?" // Translated
         )
 
         if (!confirmed) {
-            if (fileInputRef.current) fileInputRef.current.value = "" // Reset input
+            if (fileInputRef.current) fileInputRef.current.value = "" 
             return
         }
 
@@ -63,9 +63,8 @@ export function BackupManager() {
             try {
                 const json = JSON.parse(event.target?.result as string)
 
-                // Validation: Check if it looks like our backup
                 if (!json.stocks || !json.transactions) {
-                    throw new Error("Invalid backup file format")
+                    throw new Error("Format file backup tidak valid") // Translated
                 }
 
                 await db.transaction('rw', db.stocks, db.transactions, async () => {
@@ -73,16 +72,16 @@ export function BackupManager() {
                     await db.stocks.clear()
                     await db.transactions.clear()
 
-                    // B. Restore Stocks (Fixing Dates)
+                    // B. Restore Stocks
                     const stocksToRestore = json.stocks.map((s: any) => ({
                         ...s,
-                        updatedAt: new Date(s.updatedAt) // Convert String -> Date
+                        updatedAt: new Date(s.updatedAt) 
                     }))
 
-                    // C. Restore Transactions (Fixing Dates)
+                    // C. Restore Transactions
                     const txToRestore = json.transactions.map((t: any) => ({
                         ...t,
-                        date: new Date(t.date) // Convert String -> Date
+                        date: new Date(t.date) 
                     }))
 
                     // D. Bulk Add
@@ -90,12 +89,12 @@ export function BackupManager() {
                     await db.transactions.bulkAdd(txToRestore)
                 })
 
-                alert("Data restored successfully! The page will now reload.")
+                alert("Data berhasil dipulihkan! Halaman akan dimuat ulang.") // Translated
                 window.location.reload()
 
             } catch (error) {
                 console.error("Import failed:", error)
-                alert("Failed to restore data. File might be corrupted.")
+                alert("Gagal memulihkan data. File mungkin rusak.") // Translated
             }
         }
 
@@ -105,15 +104,15 @@ export function BackupManager() {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="outline" size="icon" title="Data Settings">
+                <Button variant="outline" size="icon" title="Pengaturan Data">
                     <Database className="h-4 w-4 text-slate-600" />
                 </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Data Management</DialogTitle>
+                    <DialogTitle>Manajemen Data</DialogTitle> {/* Translated */}
                     <DialogDescription>
-                        Backup your data to a JSON file or restore from a previous backup.
+                        Cadangkan data Anda ke file JSON atau pulihkan dari cadangan sebelumnya. {/* Translated */}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -121,27 +120,26 @@ export function BackupManager() {
                     {/* EXPORT AREA */}
                     <div className="flex flex-col gap-2 p-4 border rounded-md bg-green-50 border-green-200">
                         <h3 className="font-semibold text-green-800 flex items-center gap-2">
-                            <Download className="h-4 w-4" /> Export Data
+                            <Download className="h-4 w-4" /> Ekspor Data (Backup) {/* Translated */}
                         </h3>
                         <p className="text-sm text-green-700">
-                            Download a copy of your database to your computer. Do this weekly!
+                            Unduh salinan database ke komputer Anda. Lakukan secara rutin! {/* Translated */}
                         </p>
                         <Button onClick={handleExport} className="bg-green-600 hover:bg-green-700 text-white w-full mt-2">
-                            Download Backup (.json)
+                            Unduh Backup (.json) {/* Translated */}
                         </Button>
                     </div>
 
                     {/* IMPORT AREA */}
                     <div className="flex flex-col gap-2 p-4 border rounded-md bg-red-50 border-red-200">
                         <h3 className="font-semibold text-red-800 flex items-center gap-2">
-                            <Upload className="h-4 w-4" /> Restore Data
+                            <Upload className="h-4 w-4" /> Pulihkan Data (Restore) {/* Translated */}
                         </h3>
                         <p className="text-sm text-red-700">
-                            Upload a backup file. <span className="font-bold">Warning: This wipes current data.</span>
+                            Unggah file backup. <span className="font-bold">Peringatan: Data saat ini akan ditimpa.</span> {/* Translated */}
                         </p>
 
                         <div className="mt-2">
-                            {/* Hidden Input Triggered by Button */}
                             <input
                                 type="file"
                                 accept=".json"
@@ -154,7 +152,7 @@ export function BackupManager() {
                                 className="w-full"
                                 onClick={() => fileInputRef.current?.click()}
                             >
-                                Select Backup File to Restore
+                                Pilih File Backup untuk Dipulihkan {/* Translated */}
                             </Button>
                         </div>
                     </div>

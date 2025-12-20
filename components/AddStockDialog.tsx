@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { db } from "@/lib/db" // Import your Dexie DB
+import { db } from "@/lib/db"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -22,7 +22,7 @@ import {
 import { Plus } from "lucide-react"
 
 interface AddStockDialogProps {
-    trigger?: React.ReactNode; // Accept a custom button
+    trigger?: React.ReactNode; 
 }
 
 export function AddStockDialog({ trigger }: AddStockDialogProps) {
@@ -33,8 +33,8 @@ export function AddStockDialog({ trigger }: AddStockDialogProps) {
     const [sku, setSku] = useState("")
     const [quantity, setQuantity] = useState("")
     const [price, setPrice] = useState("")
-    const [unit, setUnit] = useState("pcs") // Default unit
-    const [category, setCategory] = useState("General")
+    const [unit, setUnit] = useState("pcs") 
+    const [category, setCategory] = useState("Umum") // Translated Default
     const [displayPrice, setDisplayPrice] = useState("")
     const [rawPrice, setRawPrice] = useState(0)
     const [costPrice, setCostPrice] = useState(0)
@@ -42,8 +42,6 @@ export function AddStockDialog({ trigger }: AddStockDialogProps) {
 
     const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-
-        // Remove any non-digit characters (remove dots, Rp, letters)
         const numberString = value.replace(/[^0-9]/g, "");
 
         if (!numberString) {
@@ -53,15 +51,10 @@ export function AddStockDialog({ trigger }: AddStockDialogProps) {
         }
 
         const number = parseInt(numberString, 10);
-
-        // Set the raw number for the Database
         setRawPrice(number);
-
-        // Set the formatted string for the User (e.g. "10.000")
         setDisplayPrice(number.toLocaleString("id-ID"));
     };
 
-    // The Save Function
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         try {
@@ -70,21 +63,20 @@ export function AddStockDialog({ trigger }: AddStockDialogProps) {
                 sku,
                 category,
                 unit,
-                quantity: Number(quantity), // Convert string to number
+                quantity: Number(quantity),
                 price: rawPrice,
-                costPrice: costPrice, // Save it!
+                costPrice: costPrice,
                 minStock: Number(minStock),
                 updatedAt: new Date()
             })
 
             setDisplayPrice("");
             setRawPrice(0);
-            // 2. Reset Form & Close Modal
+            // Reset Form & Close Modal
             setName(""); setSku(""); setQuantity(""); setPrice("");
             setOpen(false)
 
-            // Optional: Add a toast notification here later
-            console.log("Stock added!")
+            alert("Barang berhasil ditambahkan!") // Translated
 
         } catch (error) {
             console.error("Failed to add stock:", error)
@@ -94,35 +86,34 @@ export function AddStockDialog({ trigger }: AddStockDialogProps) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                {/* 3. Conditional Rendering */}
                 {trigger ? (
                     trigger
                 ) : (
                     <Button>
-                        <Plus className="mr-2 h-4 w-4" /> Add Stock
+                        <Plus className="mr-2 h-4 w-4" /> Tambah Barang {/* Translated */}
                     </Button>
                 )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Add New Item</DialogTitle>
+                    <DialogTitle>Tambah Barang Baru</DialogTitle> {/* Translated */}
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="grid gap-4 py-4">
                     {/* Name Input */}
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Name</Label>
-                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+                        <Label htmlFor="name">Nama Barang</Label> {/* Translated */}
+                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Contoh: Indomie Goreng" />
                     </div>
 
                     {/* SKU & Category Row */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="sku">SKU</Label>
-                            <Input id="sku" value={sku} onChange={(e) => setSku(e.target.value.toLocaleUpperCase())} required />
+                            <Label htmlFor="sku">SKU / Kode</Label> {/* Translated */}
+                            <Input id="sku" value={sku} onChange={(e) => setSku(e.target.value.toLocaleUpperCase())} required placeholder="A001" />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="category">Category</Label>
+                            <Label htmlFor="category">Kategori</Label> {/* Translated */}
                             <Input id="category" value={category} onChange={(e) => setCategory(e.target.value)} />
                         </div>
                     </div>
@@ -130,15 +121,15 @@ export function AddStockDialog({ trigger }: AddStockDialogProps) {
                     {/* Quantity & Unit Row */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="qty">Quantity</Label>
+                            <Label htmlFor="qty">Jumlah Stok</Label> {/* Translated */}
                             <Input id="qty" type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} required />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Min Stock Alert</Label>
+                            <Label>Min. Alert</Label> {/* Translated */}
                             <Input type="number" value={minStock} onChange={(e) => setMinStock(e.target.value)} required />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Unit</Label>
+                            <Label>Satuan</Label> {/* Translated */}
                             <Select onValueChange={setUnit} defaultValue={unit}>
                                 <SelectTrigger className="cursor-pointer">
                                     <SelectValue />
@@ -149,6 +140,7 @@ export function AddStockDialog({ trigger }: AddStockDialogProps) {
                                     <SelectItem className="cursor-pointer" value="gr">Gram</SelectItem>
                                     <SelectItem className="cursor-pointer" value="box">Box</SelectItem>
                                     <SelectItem className="cursor-pointer" value="ltr">Liter</SelectItem>
+                                    <SelectItem className="cursor-pointer" value="btl">Botol</SelectItem> {/* Added common unit */}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -157,28 +149,24 @@ export function AddStockDialog({ trigger }: AddStockDialogProps) {
                     {/* Price Input */}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label>Capital Price (HPP)</Label> {/* New Field */}
+                            <Label>Harga Modal (HPP)</Label> {/* Translated */}
                             <Input
                                 type="number"
-                                placeholder="Buy Price"
+                                placeholder="0"
                                 onChange={(e) => setCostPrice(Number(e.target.value))}
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Selling Price</Label>
-                            <Label htmlFor="price">Price (per unit)</Label>
+                            <Label htmlFor="price">Harga Jual</Label> {/* Translated */}
                             <div className="relative">
-                                {/* The Prefix */}
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
                                     Rp
                                 </span>
-
-                                {/* The Input */}
                                 <Input
                                     id="price"
                                     type="text"
                                     placeholder="0"
-                                    className="pl-9" /* Padding Left to make room for 'Rp' */
+                                    className="pl-9"
                                     value={displayPrice}
                                     onChange={handlePriceChange}
                                     required
@@ -187,7 +175,7 @@ export function AddStockDialog({ trigger }: AddStockDialogProps) {
                         </div>
                     </div>
 
-                    <Button type="submit" className="cursor-pointer">Save Item</Button>
+                    <Button type="submit" className="cursor-pointer w-full mt-2">Simpan Barang</Button> {/* Translated */}
                 </form>
             </DialogContent>
         </Dialog>

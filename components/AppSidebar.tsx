@@ -12,11 +12,9 @@ import {
     BookOpen,
     Settings,
     LifeBuoy,
-    Search,
-    Package,
+    LineChart,
     ChevronsUpDown,
-    LogOut,
-    LineChart
+    LogOut
 } from "lucide-react"
 
 import { usePathname } from "next/navigation"
@@ -49,86 +47,86 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Image from "next/image"
 import { PwaInstallButton } from "@/components/PwaInstallButton"
 
-// --- DATA CONFIGURATION ---
+// --- KONFIGURASI DATA (INDONESIA) ---
 const data = {
     user: {
-        name: "Store Owner",
-        email: "admin@stockpro.com",
-        avatar: "", // Add image URL if you have one
+        name: "Pemilik Toko",
+        email: "admin@ngaturstok.com",
+        avatar: "",
     },
-    // Primary Navigation
+    // Menu Utama
     navMain: [
         {
-            title: "Overview",
+            title: "Ringkasan", // Overview
             url: "/",
             icon: LayoutDashboard,
         },
         {
-            title: "Cashier (POS)",
+            title: "Kasir (POS)", // Cashier
             url: "/cashier",
             icon: ShoppingCart,
         },
         {
-            title: "History",
+            title: "Riwayat Transaksi", // History
             url: "/transactions",
             icon: Receipt,
         },
         {
-            title: "Reports",
+            title: "Laporan", // Reports
             url: "/reports",
             icon: BarChart3,
         },
         {
-            title: "Analytics",
+            title: "Analitik", // Analytics
             url: "/analytics",
-            icon: LineChart, // or IconChartBar from tabler if you stick with that
+            icon: LineChart,
         },
     ],
-    // Operations Group
+    // Operasional
     navOperations: [
         {
-            name: "Inventory Ops",
+            name: "Inventaris", // Inventory Ops
             items: [
                 {
-                    title: "Restock Advice",
+                    title: "Saran Restock", // Restock Advice
                     url: "/restock",
                     icon: ShoppingBag,
                 },
                 {
-                    title: "Consignment",
+                    title: "Titip Jual (Konsinyasi)", // Consignment
                     url: "/consignment",
                     icon: Truck,
                 },
             ]
         }
     ],
-    // CRM & Finance Group
+    // Keuangan & Kontak
     navFinance: [
         {
-            name: "People & Debt",
+            name: "Kontak & Hutang", // People & Debt
             items: [
                 {
-                    title: "Customers",
+                    title: "Pelanggan", // Customers
                     url: "/customers",
                     icon: Users,
                 },
                 {
-                    title: "Debt Book",
+                    title: "Buku Kasbon", // Debt Book
                     url: "/debt",
                     icon: BookOpen,
                 },
             ]
         }
     ],
-    // Bottom Secondary Items
+    // Menu Sekunder
     navSecondary: [
         {
-            title: "Settings",
+            title: "Pengaturan", // Settings
             url: "#",
             icon: Settings,
         },
         {
-            title: "Help",
+            title: "Bantuan", // Help
             url: "#",
             icon: LifeBuoy,
         },
@@ -140,7 +138,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
     return (
         <Sidebar collapsible="icon" variant="inset" {...props} className="overflow-x-hidden">
-            {/* HEADER: BRANDING */}
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -149,13 +146,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 <div className="relative flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden">
                                     <Image
                                         src="/ngatur-stock-logo.png"
-                                        alt="Ngatur Stock Logo"
+                                        alt="Logo Ngatur Stok"
                                         fill
                                         className="object-contain"
                                     />
                                 </div>
-
-                                {/* Text Section */}
                                 <div className="grid flex-1 text-left text-sm leading-tight min-w-0">
                                     <span className="truncate font-semibold">Ngatur Stok</span>
                                     <span className="truncate text-xs">Aturin stokmu!</span>
@@ -166,12 +161,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarMenu>
             </SidebarHeader>
 
-            {/* CONTENT: NAVIGATION GROUPS */}
             <SidebarContent>
-
-                {/* 1. Main Platform */}
+                {/* 1. Platform Utama */}
                 <SidebarGroup>
-                    <SidebarGroupLabel>Platform</SidebarGroupLabel>
+                    <SidebarGroupLabel>Menu Utama</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {data.navMain.map((item) => (
@@ -188,7 +181,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     </SidebarGroupContent>
                 </SidebarGroup>
 
-                {/* 2. Operations (Restock / Consignment) */}
+                {/* 2. Operasional */}
                 {data.navOperations.map((group) => (
                     <SidebarGroup key={group.name} className="group-data-[collapsible=icon]:hidden">
                         <SidebarGroupLabel>{group.name}</SidebarGroupLabel>
@@ -209,7 +202,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     </SidebarGroup>
                 ))}
 
-                {/* 3. People (Customers / Debt) */}
+                {/* 3. Keuangan */}
                 {data.navFinance.map((group) => (
                     <SidebarGroup key={group.name} className="group-data-[collapsible=icon]:hidden">
                         <SidebarGroupLabel>{group.name}</SidebarGroupLabel>
@@ -232,7 +225,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
                 <SidebarSeparator className="mx-0" />
 
-                {/* 4. Secondary (Settings) */}
+                {/* 4. Sekunder */}
                 <SidebarGroup className="mt-auto">
                     <SidebarGroupContent>
                         <SidebarMenu>
@@ -251,7 +244,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarGroup>
             </SidebarContent>
 
-            {/* FOOTER: USER PROFILE */}
             <SidebarFooter>
                 <PwaInstallButton />
                 <NavUser user={data.user} />
@@ -260,8 +252,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     )
 }
 
-
-// --- HELPER COMPONENT: NAV USER (Recreated inline) ---
 function NavUser({ user }: { user: { name: string; email: string; avatar: string } }) {
     const { isMobile } = useSidebar()
 
@@ -276,7 +266,7 @@ function NavUser({ user }: { user: { name: string; email: string; avatar: string
                         >
                             <Avatar className="h-8 w-8 rounded-lg">
                                 <AvatarImage src={user.avatar} alt={user.name} />
-                                <AvatarFallback className="rounded-lg bg-slate-200">SO</AvatarFallback>
+                                <AvatarFallback className="rounded-lg bg-slate-200">TO</AvatarFallback>
                             </Avatar>
                             <div className="grid flex-1 text-left text-sm leading-tight min-w-0">
                                 <span className="truncate font-semibold">{user.name}</span>
@@ -295,7 +285,7 @@ function NavUser({ user }: { user: { name: string; email: string; avatar: string
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                                 <Avatar className="h-8 w-8 rounded-lg">
                                     <AvatarImage src={user.avatar} alt={user.name} />
-                                    <AvatarFallback className="rounded-lg">SO</AvatarFallback>
+                                    <AvatarFallback className="rounded-lg">TO</AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
                                     <span className="truncate font-semibold">{user.name}</span>
@@ -307,13 +297,13 @@ function NavUser({ user }: { user: { name: string; email: string; avatar: string
                         <DropdownMenuGroup>
                             <DropdownMenuItem>
                                 <Settings className="mr-2 h-4 w-4" />
-                                Settings
+                                Pengaturan
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>
                             <LogOut className="mr-2 h-4 w-4" />
-                            Log out
+                            Keluar
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

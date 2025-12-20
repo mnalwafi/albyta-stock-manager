@@ -5,20 +5,19 @@ import { db } from "@/lib/db"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowLeft, ShoppingBag, Copy, CheckCircle2, AlertTriangle } from "lucide-react"
+import { ShoppingBag, Copy, CheckCircle2, AlertTriangle } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export default function RestockPage() {
     const router = useRouter()
     const stocks = useLiveQuery(() => db.stocks.toArray())
 
-    if (!stocks) return <div className="p-10">Analyzing inventory...</div>
+    if (!stocks) return <div className="p-10">Menganalisa stok...</div> // Translated
 
     // 1. Filter Low Stock Items
     const lowStockItems = stocks.filter(item => item.quantity <= item.minStock)
 
     // 2. Calculate Advice
-    // Strategy: We suggest buying enough to reach 3x the minimum stock (Safety Stock)
     const adviceList = lowStockItems.map(item => {
         const targetLevel = item.minStock * 3
         const toBuy = targetLevel - item.quantity
@@ -31,16 +30,16 @@ export default function RestockPage() {
     // 3. WhatsApp / Clipboard Export
     const handleCopyList = () => {
         const date = new Date().toLocaleDateString("id-ID")
-        let text = `📋 *Restock List - ${date}*\n\n`
+        let text = `📋 *Daftar Belanja - ${date}*\n\n` // Translated
 
         adviceList.forEach(item => {
-            text += `- ${item.name}: ${item.toBuy} ${item.unit} (Stok Sisa: ${item.quantity})\n`
+            text += `- ${item.name}: ${item.toBuy} ${item.unit} (Sisa: ${item.quantity})\n` // Translated
         })
 
-        text += `\n💰 Est. Budget: Rp ${totalBudgetNeeded.toLocaleString("id-ID")}`
+        text += `\n💰 Est. Biaya: Rp ${totalBudgetNeeded.toLocaleString("id-ID")}` // Translated
 
         navigator.clipboard.writeText(text)
-        alert("Shopping list copied to clipboard! You can paste it in WhatsApp.")
+        alert("Daftar belanja disalin! Bisa langsung paste di WhatsApp.") // Translated
     }
 
     const formatMoney = (n: number) => new Intl.NumberFormat("id-ID").format(n)
@@ -52,10 +51,10 @@ export default function RestockPage() {
             <div className="flex items-center gap-4 mb-8">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <ShoppingBag className="h-6 w-6" /> Restock Advice
+                        <ShoppingBag className="h-6 w-6" /> Saran Restock {/* Translated */}
                     </h1>
                     <p className="text-muted-foreground text-sm">
-                        Items below alert threshold ({lowStockItems.length})
+                        Barang di bawah batas minimum ({lowStockItems.length}) {/* Translated */}
                     </p>
                 </div>
             </div>
@@ -65,18 +64,18 @@ export default function RestockPage() {
                 {/* LEFT: SUMMARY CARD */}
                 <Card className="md:col-span-1 h-fit bg-orange-50 border-orange-200">
                     <CardHeader>
-                        <CardTitle className="text-orange-800">Estimated Budget</CardTitle>
+                        <CardTitle className="text-orange-800">Estimasi Biaya</CardTitle> {/* Translated */}
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-bold text-orange-700">
                             Rp {formatMoney(totalBudgetNeeded)}
                         </div>
                         <p className="text-sm text-orange-600 mt-2">
-                            To restore items to safe levels (3x Min Stock).
+                            Untuk mengembalikan stok ke level aman (3x Min Stok). {/* Translated */}
                         </p>
 
                         <Button className="w-full mt-6 gap-2 bg-orange-600 hover:bg-orange-700" onClick={handleCopyList}>
-                            <Copy className="h-4 w-4" /> Copy Shopping List
+                            <Copy className="h-4 w-4" /> Salin Daftar Belanja {/* Translated */}
                         </Button>
                     </CardContent>
                 </Card>
@@ -87,10 +86,10 @@ export default function RestockPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Item Name</TableHead>
+                                    <TableHead>Nama Barang</TableHead> {/* Translated */}
                                     <TableHead className="text-center">Status</TableHead>
-                                    <TableHead className="text-right">Advice (To Buy)</TableHead>
-                                    <TableHead className="text-right">Est. Cost</TableHead>
+                                    <TableHead className="text-right">Saran Beli</TableHead> {/* Translated */}
+                                    <TableHead className="text-right">Est. Biaya</TableHead> {/* Translated */}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -99,8 +98,8 @@ export default function RestockPage() {
                                         <TableCell colSpan={4} className="text-center py-10">
                                             <div className="flex flex-col items-center text-green-600 gap-2">
                                                 <CheckCircle2 className="h-10 w-10" />
-                                                <span className="font-medium">Inventory Healthy!</span>
-                                                <span className="text-xs text-muted-foreground">No items are below minimum stock.</span>
+                                                <span className="font-medium">Stok Aman!</span> {/* Translated */}
+                                                <span className="text-xs text-muted-foreground">Tidak ada barang di bawah minimum stok.</span> {/* Translated */}
                                             </div>
                                         </TableCell>
                                     </TableRow>

@@ -5,10 +5,9 @@ import { useLiveQuery } from "dexie-react-hooks"
 import { db, type Consignment } from "@/lib/db"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, PackageOpen, CheckCircle2, Truck } from "lucide-react"
+import { PackageOpen, CheckCircle2, Truck } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 
@@ -29,7 +28,7 @@ export default function ConsignmentPage() {
     // --- STATE FOR SETTLEMENT (Setor) ---
     const [settleOpen, setSettleOpen] = useState(false)
     const [activeConsignment, setActiveConsignment] = useState<Consignment | null>(null)
-    const [soldQtys, setSoldQtys] = useState<Record<number, number>>({}) // Map stockId -> soldQty
+    const [soldQtys, setSoldQtys] = useState<Record<number, number>>({})
 
     // 1. CREATE NEW CONSIGNMENT (Outbound)
     const handleCreate = async () => {
@@ -40,15 +39,13 @@ export default function ConsignmentPage() {
 
         const quantity = Number(qty)
         if (quantity > stockItem.quantity) {
-            alert("Not enough stock in warehouse!")
+            alert("Stok di gudang tidak cukup!") // Translated
             return
         }
 
         await db.transaction('rw', db.stocks, db.consignments, async () => {
-            // A. Deduct from Warehouse
             await db.stocks.update(stockItem.id, { quantity: stockItem.quantity - quantity })
 
-            // B. Create Consignment Record
             await db.consignments.add({
                 date: new Date(),
                 customerId: Number(selectedCustomer),
@@ -64,7 +61,7 @@ export default function ConsignmentPage() {
         })
 
         setIsNewOpen(false); setQty(""); setSelectedStock("");
-        alert("Items moved to Reseller!")
+        alert("Barang berhasil dipindahkan ke Reseller!") // Translated
     }
 
     // 2. SETTLE CONSIGNMENT (Inbound/Money)
@@ -80,10 +77,9 @@ export default function ConsignmentPage() {
                     const sold = soldQtys[item.stockId] || 0
                     const returned = item.initialQty - sold
 
-                    // A. Validate
-                    if (sold > item.initialQty) throw new Error("Cannot sell more than initial qty")
+                    if (sold > item.initialQty) throw new Error("Jumlah terjual tidak boleh melebihi stok awal") // Translated
 
-                    // B. Return unsold items to Warehouse
+                    // Return unsold items to Warehouse
                     if (returned > 0) {
                         const currentStock = await db.stocks.get(item.stockId)
                         if (currentStock) {
@@ -91,7 +87,7 @@ export default function ConsignmentPage() {
                         }
                     }
 
-                    // C. Prepare Sales Record
+                    // Prepare Sales Record
                     if (sold > 0) {
                         totalRevenue += sold * item.price
                         txItems.push({
@@ -100,20 +96,20 @@ export default function ConsignmentPage() {
                     }
                 }
 
-                // D. Create Transaction for the SOLD items
+                // Create Transaction
                 if (txItems.length > 0) {
                     await db.transactions.add({
                         date: new Date(),
                         total: totalRevenue,
-                        payment: totalRevenue, // Assuming they pay cash upon settlement
+                        payment: totalRevenue,
                         change: 0,
                         customerId: activeConsignment.customerId,
-                        isDebt: false, // Can be changed if they pay later
+                        isDebt: false,
                         items: txItems
                     })
                 }
 
-                // E. Close Consignment
+                // Close Consignment
                 await db.consignments.update(activeConsignment.id, {
                     status: 'SETTLED',
                     settledAt: new Date()
@@ -121,9 +117,9 @@ export default function ConsignmentPage() {
             })
 
             setSettleOpen(false)
-            alert("Settlement complete! Revenue recorded and unsold items returned.")
+            alert("Setoran berhasil! Pendapatan dicatat dan sisa barang dikembalikan.") // Translated
         } catch (e) {
-            alert("Error during settlement. Check inputs.")
+            alert("Gagal memproses setoran. Cek input anda.") // Translated
         }
     }
 
@@ -136,41 +132,41 @@ export default function ConsignmentPage() {
                 <div className="flex items-center gap-4">
                     <div>
                         <h1 className="text-2xl font-bold flex items-center gap-2">
-                            <Truck className="h-6 w-6" /> Titip Jual (Consignment)
+                            <Truck className="h-6 w-6" /> Titip Jual (Konsinyasi) {/* Translated */}
                         </h1>
-                        <p className="text-muted-foreground text-sm">Track items held by resellers.</p>
+                        <p className="text-muted-foreground text-sm">Pantau barang yang dibawa reseller.</p> {/* Translated */}
                     </div>
                 </div>
 
                 {/* NEW CONSIGNMENT MODAL */}
                 <Dialog open={isNewOpen} onOpenChange={setIsNewOpen}>
-                    <DialogTrigger asChild><Button>+ New Shipment</Button></DialogTrigger>
+                    <DialogTrigger asChild><Button>+ Kirim Barang</Button></DialogTrigger> {/* Translated */}
                     <DialogContent>
-                        <DialogHeader><DialogTitle>Send Items to Reseller</DialogTitle></DialogHeader>
+                        <DialogHeader><DialogTitle>Kirim ke Reseller/Warung</DialogTitle></DialogHeader> {/* Translated */}
                         <div className="space-y-4 py-4">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Reseller</label>
+                                <label className="text-sm font-medium">Pilih Reseller</label> {/* Translated */}
                                 <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
-                                    <SelectTrigger><SelectValue placeholder="Select Customer" /></SelectTrigger>
+                                    <SelectTrigger><SelectValue placeholder="Pilih Pelanggan" /></SelectTrigger>
                                     <SelectContent>
                                         {customers?.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Item</label>
+                                <label className="text-sm font-medium">Barang</label> {/* Translated */}
                                 <Select value={selectedStock} onValueChange={setSelectedStock}>
-                                    <SelectTrigger><SelectValue placeholder="Select Item" /></SelectTrigger>
+                                    <SelectTrigger><SelectValue placeholder="Pilih Barang" /></SelectTrigger>
                                     <SelectContent>
-                                        {stocks?.map(s => <SelectItem key={s.id} value={s.id.toString()}>{s.name} (Stok: {s.quantity})</SelectItem>)}
+                                        {stocks?.map(s => <SelectItem key={s.id} value={s.id.toString()}>{s.name} (Sisa: {s.quantity})</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Quantity to Send</label>
+                                <label className="text-sm font-medium">Jumlah Kirim</label> {/* Translated */}
                                 <Input type="number" value={qty} onChange={e => setQty(e.target.value)} placeholder="0" />
                             </div>
-                            <Button onClick={handleCreate} className="w-full">Confirm Shipment</Button>
+                            <Button onClick={handleCreate} className="w-full">Konfirmasi Kirim</Button> {/* Translated */}
                         </div>
                     </DialogContent>
                 </Dialog>
@@ -180,7 +176,7 @@ export default function ConsignmentPage() {
             <div className="grid gap-4">
                 {activeConsignments?.length === 0 ? (
                     <div className="text-center py-10 text-muted-foreground border rounded-md bg-slate-50">
-                        No active consignments. Everyone has settled!
+                        Tidak ada titipan aktif. Semua sudah setor! {/* Translated */}
                     </div>
                 ) : (
                     activeConsignments?.map(con => (
@@ -188,7 +184,7 @@ export default function ConsignmentPage() {
                             <CardContent className="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                                 <div>
                                     <h3 className="font-bold text-lg">{getCustomerName(con.customerId)}</h3>
-                                    <p className="text-sm text-muted-foreground">Sent on: {con.date.toLocaleDateString()}</p>
+                                    <p className="text-sm text-muted-foreground">Dikirim: {con.date.toLocaleDateString()}</p> {/* Translated */}
                                     <div className="mt-2 space-y-1">
                                         {con.items.map((item, idx) => (
                                             <div key={idx} className="text-sm bg-blue-50 text-blue-700 px-2 py-1 rounded inline-block mr-2">
@@ -203,29 +199,29 @@ export default function ConsignmentPage() {
                                     setSettleOpen(o);
                                     if (o) {
                                         setActiveConsignment(con);
-                                        setSoldQtys({}); // Reset inputs
+                                        setSoldQtys({});
                                     }
                                 }}>
                                     <DialogTrigger asChild>
                                         <Button variant="outline" className="border-green-200 hover:bg-green-50 text-green-700">
-                                            <PackageOpen className="mr-2 h-4 w-4" /> Setor / Settle
+                                            <PackageOpen className="mr-2 h-4 w-4" /> Setor / Lapor {/* Translated */}
                                         </Button>
                                     </DialogTrigger>
                                     <DialogContent>
-                                        <DialogHeader><DialogTitle>Process Settlement</DialogTitle></DialogHeader>
+                                        <DialogHeader><DialogTitle>Proses Setoran</DialogTitle></DialogHeader> {/* Translated */}
                                         <div className="py-4 space-y-6">
                                             <p className="text-sm text-muted-foreground">
-                                                Enter how many items were <strong>SOLD</strong>. The rest will be returned to inventory automatically.
+                                                Masukkan jumlah yang <strong>TERJUAL</strong>. Sisanya akan otomatis dikembalikan ke gudang. {/* Translated */}
                                             </p>
 
                                             {con.items.map((item) => (
                                                 <div key={item.stockId} className="flex items-center justify-between">
                                                     <div>
                                                         <div className="font-medium">{item.name}</div>
-                                                        <div className="text-xs text-muted-foreground">Initial: {item.initialQty}</div>
+                                                        <div className="text-xs text-muted-foreground">Awal: {item.initialQty}</div> {/* Translated */}
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <label className="text-xs font-bold">SOLD:</label>
+                                                        <label className="text-xs font-bold">LAKU:</label> {/* Translated */}
                                                         <Input
                                                             type="number"
                                                             className="w-20"
@@ -242,7 +238,7 @@ export default function ConsignmentPage() {
                                             ))}
 
                                             <Button onClick={handleSettle} className="w-full bg-green-600 hover:bg-green-700">
-                                                <CheckCircle2 className="mr-2 h-4 w-4" /> Finalize Settlement
+                                                <CheckCircle2 className="mr-2 h-4 w-4" /> Selesaikan Setoran {/* Translated */}
                                             </Button>
                                         </div>
                                     </DialogContent>
